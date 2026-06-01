@@ -29,8 +29,8 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
   });
 
   const sweepTransition = {
-    duration: 1.4,
-    ease: [0.22, 1, 0.36, 1]
+    duration: 1.8,
+    ease: [0.16, 1, 0.3, 1]
   };
 
   return (
@@ -46,7 +46,9 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
           initial={false}
           animate={{ 
             x: isRevealed ? 0 : (prefersReducedMotion ? 0 : "80vw"),
-            rotate: isRevealed ? 0 : (prefersReducedMotion ? 0 : 720) 
+            rotate: isRevealed ? 0 : (prefersReducedMotion ? 0 : 1080),
+            scale: isRevealed ? 1 : (prefersReducedMotion ? 1 : 1.5),
+            filter: isRevealed ? "blur(0px)" : (prefersReducedMotion ? "blur(0px)" : "blur(12px)")
           }}
           transition={sweepTransition}
           className="relative z-20 block"
@@ -68,7 +70,8 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
           initial={false}
           animate={{ 
             opacity: isRevealed ? 1 : 0, 
-            clipPath: isRevealed ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 0% 100%)" 
+            clipPath: isRevealed ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 0% 100%)",
+            x: isRevealed ? 0 : -30
           }}
           transition={sweepTransition}
           className="hidden flex-1 items-center justify-end pr-10 lg:flex"
