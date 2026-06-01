@@ -190,13 +190,11 @@ function ShutterPanel({
   );
 }
 
-export default function Hero() {
-  const sectionRef = useRef<HTMLElement | null>(null);
+import { forwardRef } from "react";
+
+export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<number> }>(
+  ({ scrollYProgress }, ref) => {
   const prefersReducedMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
 
   const progress = useSpring(scrollYProgress, {
     stiffness: 170,
@@ -231,7 +229,7 @@ export default function Hero() {
   );
   const lensOpacity = useTransform(
     progress,
-    [0.38, 0.44, 0.7, 0.8, 0.86],
+    [0.15, 0.18, 0.7, 0.8, 0.86],
     [0, 1, 1, 0.18, 0]
   );
   const lensY = useTransform(progress, [0.44, 0.72, 0.84], ["0vh", "0vh", prefersReducedMotion ? "0vh" : "-7vh"]);
@@ -260,7 +258,7 @@ export default function Hero() {
   const revealLineScale = useTransform(progress, [0.82, 0.94], [0, 1]);
 
   return (
-    <section ref={sectionRef} id="top" className="relative h-[520dvh] bg-[#020305]">
+    <section ref={ref} id="top" className="relative h-[520dvh] bg-[#020305]">
       <div className="sticky top-0 h-[100dvh] overflow-hidden">
         <motion.div style={{ scale: videoScale, filter: videoFilter }} className="absolute inset-0 z-0">
           <video autoPlay muted loop playsInline preload="auto" className="h-full w-full object-cover">
@@ -330,4 +328,7 @@ export default function Hero() {
       </div>
     </section>
   );
-}
+});
+
+Hero.displayName = "Hero";
+export default Hero;

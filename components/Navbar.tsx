@@ -1,23 +1,22 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
 import Image from "next/image";
 
 const navItems = [
   ["Overview", "#top"],
-  ["Archive", "#top"],
-  ["Models", "#catalog"],
-  ["Contact", "#top"],
+  ["Story", "#story"],
+  ["Performance", "#performance"],
+  ["Catalog", "#catalog"],
 ];
 
-export default function Navbar() {
+export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const prefersReducedMotion = useReducedMotion();
-  const { scrollY } = useScroll();
 
-  const y = useTransform(scrollY, [0, 3100, 3500], ["-116%", "-116%", "0%"]);
-  const opacity = useTransform(scrollY, [3100, 3500], [0, 1]);
-  const logoRotate = useTransform(scrollY, [3200, 3600], [prefersReducedMotion ? 0 : -180, 0]);
-  const logoX = useTransform(scrollY, [3200, 3600], [prefersReducedMotion ? 0 : 36, 0]);
+  const y = useTransform(scrollYProgress, [0.88, 0.94], ["-116%", "0%"]);
+  const opacity = useTransform(scrollYProgress, [0.88, 0.94], [0, 1]);
+  const logoRotate = useTransform(scrollYProgress, [0.9, 0.96], [prefersReducedMotion ? 0 : -180, 0]);
+  const logoX = useTransform(scrollYProgress, [0.9, 0.96], [prefersReducedMotion ? 0 : 36, 0]);
 
   return (
     <motion.nav
