@@ -83,8 +83,7 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
           animate={{ 
             x: isRevealed ? 0 : (prefersReducedMotion ? 0 : "80vw"),
             rotate: isRevealed ? 0 : (prefersReducedMotion ? 0 : 720),
-            scale: isRevealed ? 1 : (prefersReducedMotion ? 1 : 1.2),
-            filter: isRevealed ? "blur(0px)" : (prefersReducedMotion ? "blur(0px)" : "blur(8px)")
+            scale: isRevealed ? 1 : (prefersReducedMotion ? 1 : 1.2)
           }}
           transition={sweepTransition}
           className="relative z-20 block"
