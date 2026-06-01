@@ -1,8 +1,0 @@
-META {"line":791,"id":"5777705d-e160-423d-a30f-73d9c65c68e1","type":"user","timestamp":"2026-06-01T06:58:16.923Z"}
-TOOL update_topic
-ID update_topic__update_topic_1780297096700_0
-
-Current topic: "Reverting Scroll-Dependent Hero Entrance"
-Topic summary: The user wants to revert the Hero entrance (Logo and COMPETITION mask) to a state where it is not connected to the scroll progress. I will modify Hero.tsx to use a time-based entry animation (using Framer Motion's 'animate' and initial states) rather than scroll-mapped transforms. I will ensure the transition to the rest of the page remains smooth and that other aesthetic refinements like Satoshi typography and Double-Bezel architecture are preserved.
-
-Strategic Intent: Reverting Hero entrance to a non-scroll-dependent state while preserving other refinements.

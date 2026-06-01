@@ -58,7 +58,7 @@ export default function ModelsCatalog() {
         <div className="grid gap-12 lg:grid-cols-[0.5fr_0.5fr] lg:items-start">
           <div className="lg:sticky lg:top-28">
             <span className="eyebrow">Model catalog</span>
-            <h2 className="mt-6 max-w-xl text-[3rem] leading-[0.88] text-white md:text-[4.8rem] font-frick tracking-[-0.04em]">
+            <h2 className="mt-6 max-w-xl text-[3rem] leading-[0.88] text-white md:text-[4.8rem]">
               One clean archive.
               <span className="block text-outline italic">Different silhouettes.</span>
             </h2>
@@ -104,11 +104,11 @@ export default function ModelsCatalog() {
 
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,8,0.04)_0%,rgba(3,5,8,0.58)_100%)]" />
                     <div className="relative flex h-full flex-col justify-end p-6 md:p-8">
-                      <p className="pointer-events-none absolute right-6 top-6 text-[clamp(4rem,12vw,8rem)] font-frick uppercase leading-none tracking-[-0.08em] text-white/[0.08]">
+                      <p className="pointer-events-none absolute right-6 top-6 text-[clamp(4rem,12vw,8rem)] font-black uppercase leading-none tracking-[-0.08em] text-white/[0.08]">
                         {activeGlyph}
                       </p>
                       <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/32">{activeModel.accent}</p>
-                      <p className="mt-4 text-[2.2rem] font-frick uppercase leading-[0.92] text-white md:text-[3.5rem] tracking-[-0.04em]">
+                      <p className="mt-4 text-[2.2rem] font-black uppercase leading-[0.92] text-white md:text-[3.5rem]">
                         {activeModel.name}
                       </p>
                       <p className="mt-3 max-w-md text-sm leading-6 text-white/58 md:text-base md:leading-7">
@@ -153,7 +153,7 @@ export default function ModelsCatalog() {
 
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/22">{model.type}</p>
-                    <p className="mt-2 text-[1.6rem] font-frick uppercase leading-none text-white md:text-[2.2rem] tracking-[-0.04em]">
+                    <p className="mt-2 text-[1.6rem] font-black uppercase leading-none text-white md:text-[2.2rem] font-satoshi tracking-tight">
                       {model.name}
                     </p>
                   </div>

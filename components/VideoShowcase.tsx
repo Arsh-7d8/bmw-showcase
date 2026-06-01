@@ -38,7 +38,7 @@ export default function VideoShowcase() {
               </div>
 
               <div className="max-w-[54rem]">
-                <h2 className="text-[3.2rem] leading-[0.86] text-white md:text-[5rem] lg:text-[6.8rem] font-satoshi tracking-tight">
+                <h2 className="text-[3.2rem] leading-[0.86] text-white md:text-[5rem] lg:text-[6.8rem]">
                   Surface.
                   <span className="block text-outline italic">Velocity.</span>
                   <span className="block">Controlled glare.</span>
@@ -64,7 +64,7 @@ export default function VideoShowcase() {
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,3,5,0.18)_0%,rgba(2,3,5,0.78)_100%)]" />
               <div className="relative flex min-h-[24rem] flex-col justify-end p-6 md:min-h-[34rem] md:p-8">
                 <p className="text-[10px] font-black uppercase tracking-[0.52em] text-white/34">Cabin tension</p>
-                <p className="mt-4 max-w-sm text-[2.4rem] font-satoshi uppercase leading-[0.92] text-white md:text-[3.6rem] tracking-tight">
+                <p className="mt-4 max-w-sm text-[2.4rem] font-black uppercase leading-[0.92] text-white md:text-[3.6rem]">
                   Dark cockpit.
                   <span className="block text-outline italic">Driver-first framing.</span>
                 </p>
@@ -75,7 +75,7 @@ export default function VideoShowcase() {
           <div className="flex flex-col justify-between gap-10 py-4 md:py-8">
             <div>
               <span className="eyebrow">Reel logic</span>
-              <h3 className="mt-6 max-w-3xl text-[2.8rem] leading-[0.9] text-white md:text-[4.8rem] font-satoshi tracking-tight">
+              <h3 className="mt-6 max-w-3xl text-[2.8rem] leading-[0.9] text-white md:text-[4.8rem] font-satoshi font-black">
                 Closer to an
                 <span className="block text-outline italic font-medium opacity-90">opening sequence</span>
                 than a gallery.

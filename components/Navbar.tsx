@@ -14,9 +14,9 @@ export default function Navbar() {
   const prefersReducedMotion = useReducedMotion();
   const { scrollY } = useScroll();
 
-  const y = useTransform(scrollY, [0, 3800, 4200], ["-116%", "-116%", "0%"]);
-  const opacity = useTransform(scrollY, [3800, 4200], [0, 1]);
-  const logoRotate = useTransform(scrollY, [3900, 4300], [prefersReducedMotion ? 0 : -180, 0]);
+  const y = useTransform(scrollY, [0, 3100, 3500], ["-116%", "-116%", "0%"]);
+  const opacity = useTransform(scrollY, [3100, 3500], [0, 1]);
+  const logoRotate = useTransform(scrollY, [3200, 3600], [prefersReducedMotion ? 0 : -180, 0]);
   const logoX = useTransform(scrollY, [3200, 3600], [prefersReducedMotion ? 0 : 36, 0]);
 
   return (

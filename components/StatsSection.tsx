@@ -38,11 +38,11 @@ export default function StatsSection() {
       <div className="section-shell grid gap-16 lg:grid-cols-[0.88fr_1.12fr]">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <span className="eyebrow">Performance chapter</span>
-          <h2 className="mt-6 max-w-xl text-[3.2rem] leading-[0.84] text-white md:text-[5.8rem] font-satoshi tracking-tight">
+          <h2 className="mt-6 max-w-xl text-[3.2rem] leading-[0.84] text-white md:text-[5.8rem] font-satoshi font-black tracking-tight">
             Numbers that feel
             <span className="block text-outline italic font-medium opacity-90">cut from steel.</span>
           </h2>
-          <p className="mt-8 max-w-xl text-base leading-7 text-white/54 md:text-lg md:leading-8">
+          <p className="mt-8 max-w-xl text-base leading-7 text-white/54 md:text-lg md:leading-8 font-satoshi font-light">
             This section stops behaving like a dashboard. It treats performance data as pacing, scale,
             and authored contrast so the machine still feels cinematic when the motion slows down.
           </p>
@@ -76,7 +76,7 @@ export default function StatsSection() {
                 <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/28">{spec.index}</p>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.52em] text-white/34">{spec.label}</p>
-                  <p className="mt-4 font-satoshi text-[2.8rem] uppercase leading-[0.9] tracking-tight text-white md:text-[4.5rem]">
+                  <p className="mt-4 font-satoshi font-black text-[2.8rem] uppercase leading-[0.9] tracking-[-0.05em] text-white md:text-[4.5rem]">
                     {spec.value}
                   </p>
                 </div>

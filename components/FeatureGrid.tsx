@@ -34,7 +34,7 @@ export default function FeatureGrid() {
         <div className="mb-14 grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <span className="eyebrow">Detail chapter</span>
-            <h2 className="mt-6 text-[3rem] leading-[0.88] text-white md:text-[5rem] font-satoshi tracking-tight">
+            <h2 className="mt-6 text-[3rem] leading-[0.88] text-white md:text-[5rem]">
               The supporting frames still need
               <span className="block text-outline italic">their own attitude.</span>
             </h2>
@@ -118,7 +118,7 @@ export default function FeatureGrid() {
         <div className="chapter-line mt-10 grid gap-8 pt-8 md:grid-cols-[0.7fr_1.3fr]">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/30">Closing note</p>
-            <p className="mt-4 text-[2.6rem] uppercase leading-[0.92] text-white md:text-[4rem] font-satoshi tracking-tight">
+            <p className="mt-4 text-[2.6rem] font-black uppercase leading-[0.92] text-white md:text-[4rem] font-satoshi">
               Built to feel
               <span className="block text-outline italic font-medium opacity-90">authored.</span>
             </p>

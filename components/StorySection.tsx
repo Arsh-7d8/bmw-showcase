@@ -34,7 +34,7 @@ export default function StorySection() {
           <div className="relative flex min-h-[70dvh] flex-col justify-between">
             <div className="max-w-lg">
               <span className="eyebrow">Story chapter</span>
-              <h2 className="mt-6 text-[3rem] leading-[0.88] text-white md:text-[4.8rem] font-satoshi tracking-tight">
+              <h2 className="mt-6 text-[3rem] leading-[0.88] text-white md:text-[4.8rem] font-satoshi font-black tracking-tight">
                 Scroll becomes
                 <span className="block text-outline italic font-medium opacity-90">the transition system.</span>
               </h2>
@@ -55,7 +55,7 @@ export default function StorySection() {
               <div className="space-y-8">
                 <motion.div style={{ opacity: storyOneOpacity, y: storyOneY }}>
                   <p className="text-[10px] font-black uppercase tracking-[0.52em] text-white/30">01 / Arrival</p>
-                  <p className="mt-3 text-[1.65rem] font-black uppercase leading-[0.94] text-white md:text-[2.4rem] font-satoshi tracking-tight">
+                  <p className="mt-3 text-[1.65rem] font-black uppercase leading-[0.94] text-white md:text-[2.4rem] font-satoshi">
                     Start with quiet
                     <span className="block text-outline italic">before the pressure.</span>
                   </p>
@@ -66,7 +66,7 @@ export default function StorySection() {
 
                 <motion.div style={{ opacity: storyTwoOpacity, y: storyTwoY }}>
                   <p className="text-[10px] font-black uppercase tracking-[0.52em] text-white/30">02 / Surface</p>
-                  <p className="mt-3 text-[1.65rem] font-black uppercase leading-[0.94] text-white md:text-[2.4rem] font-satoshi tracking-tight">
+                  <p className="mt-3 text-[1.65rem] font-black uppercase leading-[0.94] text-white md:text-[2.4rem] font-satoshi">
                     Let reflection,
                     <span className="block text-outline italic">crop, and motion speak.</span>
                   </p>
@@ -77,7 +77,7 @@ export default function StorySection() {
 
                 <motion.div style={{ opacity: storyThreeOpacity, y: storyThreeY }}>
                   <p className="text-[10px] font-black uppercase tracking-[0.52em] text-white/30">03 / Cabin</p>
-                  <p className="mt-3 text-[1.65rem] font-black uppercase leading-[0.94] text-white md:text-[2.4rem] font-satoshi tracking-tight">
+                  <p className="mt-3 text-[1.65rem] font-black uppercase leading-[0.94] text-white md:text-[2.4rem] font-satoshi">
                     Finish with the
                     <span className="block text-outline italic">driver’s point of view.</span>
                   </p>

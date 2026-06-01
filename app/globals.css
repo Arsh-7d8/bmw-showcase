@@ -113,8 +113,6 @@
     @apply border-t border-white/10;
   }
 
-  
-
   .quiet-copy {
     @apply text-sm leading-6 text-white/58 md:text-base md:leading-7;
   }
