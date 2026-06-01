@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
+import { motion, useReducedMotion, useTransform, useMotionValueEvent, type MotionValue } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const navItems = [
   ["Overview", "#top"],
@@ -13,33 +13,29 @@ const navItems = [
 
 export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const prefersReducedMotion = useReducedMotion();
-  const [viewportWidth, setViewportWidth] = useState(1440);
+  const [isRevealed, setIsRevealed] = useState(false);
 
-  useEffect(() => {
-    setViewportWidth(window.innerWidth);
-    const handleResize = () => setViewportWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const y = useTransform(scrollYProgress, [0.88, 0.9], ["-116%", "0%"]);
-  const opacity = useTransform(scrollYProgress, [0.88, 0.9], [0, 1]);
+  // The navbar drops down tied to scroll for a connected feel.
+  const y = useTransform(scrollYProgress, [0.88, 0.91], ["-116%", "0%"]);
+  const navOpacity = useTransform(scrollYProgress, [0.88, 0.91], [0, 1]);
   
-  // Start the logo off-screen to the right, roll across, and settle on the left.
-  const logoX = useTransform(scrollYProgress, [0.9, 0.98], [prefersReducedMotion ? 0 : viewportWidth - 100, 0]);
-  const logoRotate = useTransform(scrollYProgress, [0.9, 0.98], [prefersReducedMotion ? 0 : 720, 0]);
+  // Trigger the premium time-based sweep animation when crossing the threshold.
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    if (latest > 0.9) {
+      if (!isRevealed) setIsRevealed(true);
+    } else {
+      if (isRevealed) setIsRevealed(false);
+    }
+  });
 
-  // Reveal the nav links as the logo sweeps past them.
-  const linksOpacity = useTransform(scrollYProgress, [0.92, 0.98], [0, 1]);
-  const linksClipPath = useTransform(
-    scrollYProgress, 
-    [0.9, 0.98], 
-    ["inset(0 100% 0 0)", "inset(0 0% 0 0)"]
-  );
+  const sweepTransition = {
+    duration: 1.4,
+    ease: [0.22, 1, 0.36, 1]
+  };
 
   return (
     <motion.nav
-      style={{ y, opacity }}
+      style={{ y, opacity: navOpacity }}
       className="fixed left-0 top-0 z-40 flex w-full items-center border-b border-white/10 bg-black/52 px-5 py-4 backdrop-blur-2xl md:px-10 md:py-6"
     >
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between">
@@ -47,7 +43,12 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
         {/* The Rolling Logo */}
         <motion.a
           href="#top"
-          style={{ rotate: logoRotate, x: logoX }}
+          initial={false}
+          animate={{ 
+            x: isRevealed ? 0 : (prefersReducedMotion ? 0 : "80vw"),
+            rotate: isRevealed ? 0 : (prefersReducedMotion ? 0 : 720) 
+          }}
+          transition={sweepTransition}
           className="relative z-20 block"
           aria-label="BMW M4 Showcase home"
         >
@@ -62,9 +63,14 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
           />
         </motion.a>
 
-        {/* The Nav Links (Revealed by the sweep) */}
+        {/* The Nav Links (Revealed from right to left by the sweep) */}
         <motion.div 
-          style={{ opacity: linksOpacity, clipPath: linksClipPath }}
+          initial={false}
+          animate={{ 
+            opacity: isRevealed ? 1 : 0, 
+            clipPath: isRevealed ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 0% 100%)" 
+          }}
+          transition={sweepTransition}
           className="hidden flex-1 items-center justify-end pr-10 lg:flex"
         >
           <div className="flex items-center gap-10">
