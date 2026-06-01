@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 const navItems = [
   ["Overview", "#top"],
@@ -12,11 +13,29 @@ const navItems = [
 
 export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const prefersReducedMotion = useReducedMotion();
+  const [viewportWidth, setViewportWidth] = useState(1440);
 
-  const y = useTransform(scrollYProgress, [0.88, 0.94], ["-116%", "0%"]);
-  const opacity = useTransform(scrollYProgress, [0.88, 0.94], [0, 1]);
-  const logoRotate = useTransform(scrollYProgress, [0.9, 0.96], [prefersReducedMotion ? 0 : -360, 0]);
-  const logoX = useTransform(scrollYProgress, [0.9, 0.96], [prefersReducedMotion ? 0 : 100, 0]);
+  useEffect(() => {
+    setViewportWidth(window.innerWidth);
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const y = useTransform(scrollYProgress, [0.88, 0.9], ["-116%", "0%"]);
+  const opacity = useTransform(scrollYProgress, [0.88, 0.9], [0, 1]);
+  
+  // Start the logo off-screen to the right, roll across, and settle on the left.
+  const logoX = useTransform(scrollYProgress, [0.9, 0.98], [prefersReducedMotion ? 0 : viewportWidth - 100, 0]);
+  const logoRotate = useTransform(scrollYProgress, [0.9, 0.98], [prefersReducedMotion ? 0 : 720, 0]);
+
+  // Reveal the nav links as the logo sweeps past them.
+  const linksOpacity = useTransform(scrollYProgress, [0.92, 0.98], [0, 1]);
+  const linksClipPath = useTransform(
+    scrollYProgress, 
+    [0.9, 0.98], 
+    ["inset(0 100% 0 0)", "inset(0 0% 0 0)"]
+  );
 
   return (
     <motion.nav
@@ -24,45 +43,46 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
       className="fixed left-0 top-0 z-40 flex w-full items-center border-b border-white/10 bg-black/52 px-5 py-4 backdrop-blur-2xl md:px-10 md:py-6"
     >
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between">
-        <div className="relative flex items-center">
-          <motion.a
-            href="#top"
-            style={{ rotate: logoRotate, x: logoX }}
-            className="relative z-10 block"
-            aria-label="BMW M4 Showcase home"
-          >
-            <Image
-              src="/bmw-logo-v2.png"
-              alt="BMW"
-              width={160}
-              height={160}
-              sizes="(min-width: 1024px) 86px, (min-width: 768px) 72px, 56px"
-              className="h-auto w-14 object-contain drop-shadow-[0_18px_26px_rgba(0,0,0,0.4)] md:w-[72px] lg:w-[86px]"
-              priority
-            />
-          </motion.a>
-          <motion.span 
-            style={{ opacity: useTransform(scrollYProgress, [0.93, 0.96], [0, 1]) }}
-            className="absolute left-[80px] text-lg font-black tracking-widest text-white md:left-[100px] lg:left-[110px]"
-          >
-            M4
-          </motion.span>
-        </div>
+        
+        {/* The Rolling Logo */}
+        <motion.a
+          href="#top"
+          style={{ rotate: logoRotate, x: logoX }}
+          className="relative z-20 block"
+          aria-label="BMW M4 Showcase home"
+        >
+          <Image
+            src="/bmw-logo-v2.png"
+            alt="BMW"
+            width={160}
+            height={160}
+            sizes="(min-width: 1024px) 86px, (min-width: 768px) 72px, 56px"
+            className="h-auto w-14 object-contain drop-shadow-[0_18px_26px_rgba(0,0,0,0.4)] md:w-[72px] lg:w-[86px]"
+            priority
+          />
+        </motion.a>
 
-        <div className="hidden items-center gap-10 lg:flex">
-          {navItems.map(([label, href]) => (
-            <a
-              key={label}
-              href={href}
-              className="group relative text-[11px] font-black uppercase tracking-[0.4em] text-white/70 transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-white"
-            >
-              <span className="relative z-10">{label}</span>
-              <span className="absolute inset-x-0 -bottom-2 h-[2px] origin-left scale-x-0 bg-white transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100" />
-            </a>
-          ))}
-        </div>
+        {/* The Nav Links (Revealed by the sweep) */}
+        <motion.div 
+          style={{ opacity: linksOpacity, clipPath: linksClipPath }}
+          className="hidden flex-1 items-center justify-end pr-10 lg:flex"
+        >
+          <div className="flex items-center gap-10">
+            {navItems.map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                className="group relative text-[11px] font-black uppercase tracking-[0.4em] text-white/70 transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-white"
+              >
+                <span className="relative z-10">{label}</span>
+                <span className="absolute inset-x-0 -bottom-2 h-[2px] origin-left scale-x-0 bg-white transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100" />
+              </a>
+            ))}
+          </div>
+        </motion.div>
 
-        <div className="flex items-center gap-6">
+        {/* The Munich Tag (Static on the far right) */}
+        <div className="flex items-center gap-6 relative z-10">
           <div className="hidden text-right md:block">
             <p className="text-[9px] font-black uppercase tracking-[0.5em] text-white/42">
               Munich / 2026
