@@ -15,8 +15,8 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
 
   const y = useTransform(scrollYProgress, [0.88, 0.94], ["-116%", "0%"]);
   const opacity = useTransform(scrollYProgress, [0.88, 0.94], [0, 1]);
-  const logoRotate = useTransform(scrollYProgress, [0.9, 0.96], [prefersReducedMotion ? 0 : -180, 0]);
-  const logoX = useTransform(scrollYProgress, [0.9, 0.96], [prefersReducedMotion ? 0 : 36, 0]);
+  const logoRotate = useTransform(scrollYProgress, [0.9, 0.96], [prefersReducedMotion ? 0 : -360, 0]);
+  const logoX = useTransform(scrollYProgress, [0.9, 0.96], [prefersReducedMotion ? 0 : 100, 0]);
 
   return (
     <motion.nav
@@ -24,22 +24,30 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
       className="fixed left-0 top-0 z-40 flex w-full items-center border-b border-white/10 bg-black/52 px-5 py-4 backdrop-blur-2xl md:px-10 md:py-6"
     >
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between">
-        <motion.a
-          href="#top"
-          style={{ rotate: logoRotate, x: logoX }}
-          className="relative z-10 block"
-          aria-label="BMW M4 Showcase home"
-        >
-          <Image
-            src="/bmw-logo-v2.png"
-            alt="BMW"
-            width={160}
-            height={160}
-            sizes="(min-width: 1024px) 86px, (min-width: 768px) 72px, 56px"
-            className="h-auto w-14 object-contain drop-shadow-[0_18px_26px_rgba(0,0,0,0.4)] md:w-[72px] lg:w-[86px]"
-            priority
-          />
-        </motion.a>
+        <div className="relative flex items-center">
+          <motion.a
+            href="#top"
+            style={{ rotate: logoRotate, x: logoX }}
+            className="relative z-10 block"
+            aria-label="BMW M4 Showcase home"
+          >
+            <Image
+              src="/bmw-logo-v2.png"
+              alt="BMW"
+              width={160}
+              height={160}
+              sizes="(min-width: 1024px) 86px, (min-width: 768px) 72px, 56px"
+              className="h-auto w-14 object-contain drop-shadow-[0_18px_26px_rgba(0,0,0,0.4)] md:w-[72px] lg:w-[86px]"
+              priority
+            />
+          </motion.a>
+          <motion.span 
+            style={{ opacity: useTransform(scrollYProgress, [0.93, 0.96], [0, 1]) }}
+            className="absolute left-[80px] text-lg font-black tracking-widest text-white md:left-[100px] lg:left-[110px]"
+          >
+            M4
+          </motion.span>
+        </div>
 
         <div className="hidden items-center gap-10 lg:flex">
           {navItems.map(([label, href]) => (
