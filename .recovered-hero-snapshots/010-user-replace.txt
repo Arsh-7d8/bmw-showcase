@@ -1,0 +1,16 @@
+META {"line":231,"id":"27df402e-3ca2-424e-932d-ae901705b703","type":"user","timestamp":"2026-06-01T06:07:17.215Z"}
+TOOL replace
+ID replace__replace_1780293999057_1
+
+Successfully modified file: C:\Users\balji\Desktop\bmw-showcase\components\ModelsCatalog.tsx (1 replacements). Here is the updated code:
+"use client";
+
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import Button from "./Button";
+
+const models = [
+  {
+    id: "m4",
+    name: "M4 Competition",
+...

@@ -1,0 +1,190 @@
+META {"line":714,"id":"3bb698bf-e88f-49e8-9af4-1a70e7b15dd9","type":"user","timestamp":"2026-06-01T06:50:51.660Z"}
+TOOL read_file
+ID read_file__read_file_1780296591541_0
+
+"use client";
+
+import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from "framer-motion";
+import { useState, useRef } from "react";
+import Image from "next/image";
+import Button from "./Button";
+
+interface UnifiedHeroProps {
+  onComplete: () => void;
+}
+
+/**
+ * FINAL MUSEUM-GRADE RECREATION
+ * Focus: Competition Mask, Logo Entrance, and Shutter Mechanics.
+ */
+export default function Hero({ onComplete }: UnifiedHeroProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFinished, setIsFinished] = useState(false);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 80,
+    damping: 30,
+    restDelta: 0.0001
+  });
+
+  // --- REFINED MAPPINGS (Absolute Calibration) ---
+
+  // 1. Logo Entrance (0% to 25%)
+  const logoOpacity = useTransform(smoothProgress, [0, 0.05, 0.18, 0.28], [1, 1, 1, 0]);
+  const logoScale = useTransform(smoothProgress, [0, 0.22], [1.5, 1]);
+  const logoRotateY = useTransform(smoothProgress, [0, 0.22], [-45, 0]);
+  const logoRotateZ = useTransform(smoothProgress, [0, 0.22], [-10, 0]);
+
+  // 2. Shutters (22% to 55%)
+  const shutterX = useTransform(smoothProgress, [0.22, 0.55], [0, 100]);
+  const leftShutterX = useTransform(shutterX, (v) => `-${v}%`);
+  const rightShutterX = useTransform(shutterX, (v) => `${v}%`);
+
+  // 3. Competition Mask (Pass-Through)
+  // Starts late to ensure doors are wide open, ends before UI reveal.
+  const compOpacity = useTransform(smoothProgress, [0.45, 0.55, 0.88, 0.95], [0, 1, 1, 0]);
+  const compScale = useTransform(smoothProgress, [0.55, 0.9], [1, 650]);
+  const compBlur = useTransform(smoothProgress, [0.45, 0.58], ["blur(40px)", "blur(0px)"]);
+  
+  // High-Impact Glow for the Mask effect
+  const glowOpacity = useTransform(smoothProgress, [0.55, 0.65, 0.8], [0, 0.8, 0]);
+  const glowScale = useTransform(smoothProgress, [0.55, 0.8], [0.5, 6]);
+
+  // 4. Background & UI Reveal
+  const videoOpacity = useTransform(smoothProgress, [0.5, 0.85], [0.3, 1]);
+  const uiOpacity = useTransform(smoothProgress, [0.92, 0.98], [0, 1]);
+  const uiY = useTransform(smoothProgress, [0.92, 1], [30, 0]);
+  const accentScale = useTransform(smoothProgress, [0.92, 1], [0, 1]);
+
+  useMotionValueEvent(smoothProgress, "change", (v) => {
+    if (v >= 0.99 && !isFinished) {
+      setIsFinished(true);
+      onComplete();
+    }
+  });
+
+  const LOGO_DIM = 360;
+
+  return (
+    <div ref={containerRef} className="relative h-[800vh] w-full bg-black">
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
+        
+        {/* Background Video (revealed as Competition mask expands) */}
+        <motion.div style={{ opacity: videoOpacity }} className="absolute inset-0 z-0">
+          <video autoPlay muted loop playsInline className="h-full w-full object-cover brightness-[1.1] contrast-[1.1]">
+            <source src="/hero.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-black/40" />
+        </motion.div>
+
+        {/* Layer 1: COMPETITION MASK (Pass-Through Effect) */}
+        <motion.div
+          style={{ 
+            opacity: compOpacity,
+            scale: compScale,
+            filter: compBlur,
+            transformOrigin: "50% 50.1%", 
+            zIndex: 10
+          }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <div className="relative flex items-center justify-center">
+            <h2 className="font-frick text-[15vw] md:text-[14vw] font-black uppercase tracking-[-0.04em] text-white leading-none whitespace-nowrap drop-shadow-[0_0_80px_rgba(255,255,255,0.15)]">
+              COMPETITION
+            </h2>
+            
+            {/* Center Explosion Glow (The 'Hole' in the mask) */}
+            <motion.div
+              style={{ opacity: glowOpacity, scale: glowScale }}
+              className="absolute w-[300px] h-[300px] bg-white rounded-full blur-[120px] mix-blend-screen -z-10"
+            />
+          </div>
+        </motion.div>
+
+        {/* Layer 2: SHUTTER SYSTEM (Entrance Mechanics) */}
+        <div className="absolute inset-0 z-20 flex pointer-events-none overflow-hidden">
+          
+          {/* Left Panel */}
+          <motion.div
+            style={{ x: leftShutterX }}
+            className="relative h-full w-1/2 bg-[#050505] overflow-hidden border-r border-white/10 shadow-[30px_0_60px_rgba(0,0,0,1)]"
+          >
+            <div className="absolute top-0 right-0 h-full w-[100vw] flex items-center justify-center translate-x-1/2">
+              <motion.div
+                style={{ 
+                  opacity: logoOpacity, 
+                  scale: logoScale, 
+                  rotateY: logoRotateY, 
+                  rotateZ: logoRotateZ,
+                  width: LOGO_DIM,
+                  height: LOGO_DIM
+                }}
+                className="relative flex items-center justify-center"
+              >
+                 <Image src="/bmw-logo-v2.png" alt="BMW" fill className="object-contain" priority />
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Right Panel */}
+          <motion.div
+            style={{ x: rightShutterX }}
+            className="relative h-full w-1/2 bg-[#050505] overflow-hidden border-l border-white/10 shadow-[-30px_0_60px_rgba(0,0,0,1)]"
+          >
+            <div className="absolute top-0 left-0 h-full w-[100vw] flex items-center justify-center -translate-x-1/2">
+              <motion.div
+                style={{ 
+                  opacity: logoOpacity, 
+                  scale: logoScale, 
+                  rotateY: logoRotateY, 
+                  rotateZ: logoRotateZ,
+                  width: LOGO_DIM,
+                  height: LOGO_DIM
+                }}
+                className="relative flex items-center justify-center"
+              >
+                 <Image src="/bmw-logo-v2.png" alt="BMW" fill className="object-contain" priority />
+              </motion.div>
+            </div>
+          </motion.div>
+
+        </div>
+
+        {/* Layer 3: FINAL UI REVEAL */}
+        <motion.div
+          style={{ opacity: uiOpacity, y: uiY }}
+          className="section-shell relative z-30 flex h-full flex-col justify-center"
+        >
+          <div className="max-w-6xl">
+            <motion.div 
+              style={{ scaleX: accentScale }} 
+              transition={{ ease: [0.32, 0.72, 0, 1], duration: 1 }}
+              className="mb-12 h-px w-32 origin-left bg-gradient-to-r from-[#0066b1] to-[#00a0e9]" 
+            />
+            <h1 className="font-satoshi text-[clamp(4.5rem,11vw,12rem)] font-black leading-[0.82] tracking-[-0.03em] uppercase mb-12">
+              <span className="block text-white drop-shadow-2xl">AGGRESSIVE</span>
+              <span className="block bg-gradient-to-r from-white via-[#00a0e9] to-[#0066b1] bg-clip-text text-transparent">BY DESIGN.</span>
+            </h1>
+            <div className="flex gap-6">
+              <Button variant="primary" className="font-satoshi">Configure build</Button>
+              <Button className="font-satoshi">Explore dynamics</Button>
+            </div>
+          </div>
+        </motion.div>
+
+      </div>
+    </div>
+  );
+}
+     </div>
+        </motion.div>
+
+      </div>
+    </div>
+  );
+}

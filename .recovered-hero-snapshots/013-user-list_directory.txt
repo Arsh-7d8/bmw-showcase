@@ -1,0 +1,15 @@
+META {"line":239,"id":"a9127561-e164-4c81-81ca-e55876e9d39a","type":"user","timestamp":"2026-06-01T06:07:17.202Z"}
+TOOL list_directory
+ID list_directory__list_directory_1780293722039_1
+
+Directory listing for C:\Users\balji\Desktop\bmw-showcase\components:
+CreativeScrollProgress.tsx (586 bytes)
+CustomCursor.tsx (2024 bytes)
+FeatureGrid.tsx (5450 bytes)
+Hero.tsx (6948 bytes)
+ModelsCatalog.tsx (7433 bytes)
+Navbar.tsx (3306 bytes)
+SmoothScroll.tsx (758 bytes)
+StatsSection.tsx (4641 bytes)
+StorySection.tsx (7865 bytes)
+VideoShowcase.tsx (4948 bytes)

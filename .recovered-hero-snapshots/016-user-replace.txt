@@ -1,0 +1,48 @@
+META {"line":239,"id":"27df402e-3ca2-424e-932d-ae901705b703","type":"user","timestamp":"2026-06-01T06:07:17.215Z"}
+TOOL replace
+ID replace__replace_1780293999710_2
+
+Successfully modified file: C:\Users\balji\Desktop\bmw-showcase\components\Hero.tsx (1 replacements). Here is the updated code:
+"use client";
+
+import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from "framer-motion";
+import { useState, useRef } from "react";
+import Image from "next/image";
+import Button from "./Button";
+
+interface UnifiedHeroProps {
+  onComplete: () => void;
+}
+
+...
+            zIndex: 10
+          }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <div className="relative flex items-center justify-center">
+            <h2 className="font-frick text-[15vw] md:text-[14vw] font-black uppercase tracking-[-0.04em] text-white leading-none whitespace-nowrap drop-shadow-[0_0_80px_rgba(255,255,255,0.15)]">
+              COMPETITION
+            </h2>
+            
+            {/* Center Explosion Glow (The 'Hole' in the mask) */}
+            <motion.div
+...
+          <div className="max-w-6xl">
+            <motion.div 
+              style={{ scaleX: accentScale }} 
+              className="mb-12 h-px w-32 origin-left bg-gradient-to-r from-[#0066b1] to-[#00a0e9]" 
+            />
+            <h1 className="font-frick text-[clamp(4.5rem,11vw,12rem)] leading-[0.82] tracking-[-0.03em] uppercase mb-12">
+              <span className="block text-white drop-shadow-2xl">AGGRESSIVE</span>
+              <span className="block bg-gradient-to-r from-white via-[#00a0e9] to-[#0066b1] bg-clip-text text-transparent">BY DESIGN.</span>
+            </h1>
+            <div className="flex gap-6">
+              <Button variant="primary">Configure build</Button>
+              <Button>Explore dynamics</Button>
+            </div>
+          </div>
+        </motion.div>
+
+      </div>
+    </div>
+...

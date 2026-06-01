@@ -1,0 +1,31 @@
+META {"line":762,"id":"5d0086b8-0a9e-4108-8614-5d5cc759be18","type":"user","timestamp":"2026-06-01T06:54:30.305Z"}
+TOOL write_file
+ID write_file__write_file_1780296869807_0
+
+Successfully created and wrote to new file: C:\Users\balji\.gemini\tmp\balji\a4bc24a1-e5c1-444e-b121-e9504379bf56\plans\emergency-fixes.md. Here is the updated code:
+# Immediate Corrective Action Plan
+
+## Objective
+Fix the broken 'COMPETITION' mask, the BMW logo entrance, and the missing Navbar animation immediately.
+
+## Diagnostics
+1. **Header Animation Missing**: The `Navbar.tsx` uses global `scrollYProgress` mapped between `[0.55, 0.62]`. Given the massive page height (`800vh` just for Hero), `0.55` is way too far down. It needs to appear immediately after the Hero sequence finishes (around `0.15` to `0.2` global scroll, or use a local state triggered by Hero completion).
+2. **"Grey Window" / Broken Mask**: 
+   - The `COMPETITION` text in `Hero.tsx` used `text-white/1.5` which is Tailwind for `1.5%` opacity or invalid. It needs to be significantly more visible (e.g., `text-white/10` or `text-white/20`).
+   - The CSS mask-image `[mask-image:radial-gradient(circle_at_center,black_30%,transparent_70%)]` might be cutting out the text too aggressively, making it look like a grey void when combined with the black background. We will simplify the mask to a clean text-stroke or soft opacity pass-through to ensure it works.
+   - The "grey window" is likely the `bg-[#050505]` shutter panels overlapping or failing to transition out properly.
+3. **BMW Logo "Fucked Up"**:
+   - The logo in the shutter panels might be distorted or poorly positioned. We need to ensure it's a crisp, centralized entrance. The dual-panel split might be breaking the image alignment.
+
+## Implementation Steps
+
+1. **Fix `Hero.tsx` Entrance Mechanics:**
+   - **Text Opacity & Mask**: Change the `COMPETITION` text back to a visible state (`text-white/20` or higher, or a stark text-outline).
+   - **Shutter Alignment**: Ensure the logo halves are perfectly aligned in the center. The current `translate-x-1/2` logic might be slightly off due to container bounds.
+   - **Z-Index Layering**: Ensure the mask scales up *through* the viewer without being clipped by the background.
+
+2. **Fix `Navbar.tsx` Animation Trigger:**
+   - Modify the `useTransform` range in `Navbar.tsx` to trigger much earlier (e.g., `[0.1, 0.15]`), or use a state-based approach triggered by the `onComplete` prop from `Hero.tsx`. Let's use global scroll but mapped to the end of the `800vh` container. If Hero is `800vh`, and the rest of the page is ~`500vh`, then `800 / 1300` is roughly `0.6`. We should probably just trigger it based on a pixel offset or earlier global scroll.
+
+3. **Verify:**
+   - Check the localhost feed immediately.

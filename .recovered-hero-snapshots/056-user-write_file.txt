@@ -1,0 +1,177 @@
+META {"line":806,"id":"de23282d-e107-46ba-98ac-6ff515b98650","type":"user","timestamp":"2026-06-01T06:58:55.179Z"}
+TOOL write_file
+ID write_file__write_file_1780297133925_0
+
+Successfully overwrote file: C:\Users\balji\Desktop\bmw-showcase\components\Hero.tsx. Here is the updated code:
+"use client";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Button from "./Button";
+
+interface UnifiedHeroProps {
+  onComplete: () => void;
+}
+
+/**
+ * REVERTED TIME-BASED ENTRANCE
+ * Decoupled from scroll. Focus on cinematic load-in sequence.
+ */
+export default function Hero({ onComplete }: UnifiedHeroProps) {
+  const [phase, setPhase] = useState<"logo" | "shutters" | "mask" | "final">("logo");
+  const [isFinished, setIsFinished] = useState(false);
+
+  useEffect(() => {
+    // Phase 1: Logo Entrance (already started)
+    // Phase 2: Open Shutters
+    const shutterTimer = setTimeout(() => setPhase("shutters"), 1200);
+    
+    // Phase 3: Competition Mask
+    const maskTimer = setTimeout(() => setPhase("mask"), 1800);
+    
+    // Phase 4: Final UI Reveal
+    const finalTimer = setTimeout(() => {
+      setPhase("final");
+      setIsFinished(true);
+      onComplete();
+    }, 2800);
+
+    return () => {
+      clearTimeout(shutterTimer);
+      clearTimeout(maskTimer);
+      clearTimeout(finalTimer);
+    };
+  }, [onComplete]);
+
+  const LOGO_DIM = 360;
+  const PREMIUM_EASE = [0.32, 0.72, 0, 1];
+
+  return (
+    <section className="relative h-screen w-full bg-black overflow-hidden">
+      
+      {/* Background Video with subtle continuous zoom */}
+      <motion.div 
+        initial={{ scale: 1.05, opacity: 0.3 }}
+        animate={{ 
+          scale: phase === "final" ? 1 : 1.05,
+          opacity: phase === "final" ? 1 : 0.4 
+        }}
+        transition={{ duration: 1.5, ease: PREMIUM_EASE }}
+        className="absolute inset-0 z-0"
+      >
+        <video autoPlay muted loop playsInline className="h-full w-full object-cover brightness-[1.1] contrast-[1.1]">
+          <source src="/hero.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/40" />
+      </motion.div>
+
+      {/* Layer 1: COMPETITION MASK */}
+      <AnimatePresence>
+        {(phase === "mask" || phase === "final") && (
+          <motion.div
+            initial={{ opacity: 0, scale: 1, filter: "blur(20px)" }}
+            animate={{ 
+              opacity: phase === "mask" ? 1 : 0, 
+              scale: phase === "mask" ? 1 : 400,
+              filter: phase === "mask" ? "blur(0px)" : "blur(40px)"
+            }}
+            transition={{ 
+              opacity: { duration: 0.4 },
+              scale: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+              filter: { duration: 0.8 }
+            }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+          >
+            <div className="relative flex items-center justify-center">
+              <h2 className="font-satoshi text-[15vw] md:text-[14vw] font-black uppercase tracking-[-0.04em] text-white/25 leading-none whitespace-nowrap drop-shadow-[0_0_80px_rgba(255,255,255,0.15)]">
+                COMPETITION
+              </h2>
+              <div className="absolute w-[400px] h-[400px] bg-white rounded-full blur-[140px] mix-blend-screen -z-10" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Layer 2: SHUTTER SYSTEM */}
+      <div className="absolute inset-0 z-20 flex pointer-events-none overflow-hidden">
+        {/* Left Panel */}
+        <motion.div
+          animate={{ x: phase !== "logo" ? "-100%" : "0%" }}
+          transition={{ duration: 1.2, ease: PREMIUM_EASE, delay: 0.2 }}
+          className="relative h-full w-1/2 bg-[#020305] overflow-hidden border-r border-white/10 shadow-[30px_0_60px_rgba(0,0,0,1)]"
+        >
+          <div className="absolute top-0 right-[-1px] h-full w-[100vw] flex items-center justify-center translate-x-1/2">
+            <motion.div
+              initial={{ opacity: 0, scale: 1.5, rotateY: -45, rotateZ: -10 }}
+              animate={{ 
+                opacity: phase === "logo" ? 1 : 0, 
+                scale: 1, 
+                rotateY: 0, 
+                rotateZ: 0 
+              }}
+              transition={{ duration: 1, ease: PREMIUM_EASE }}
+              style={{ width: LOGO_DIM, height: LOGO_DIM }}
+              className="relative flex items-center justify-center"
+            >
+               <Image src="/bmw-logo-v2.png" alt="BMW" fill className="object-contain brightness-[1.1]" priority />
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Right Panel */}
+        <motion.div
+          animate={{ x: phase !== "logo" ? "100%" : "0%" }}
+          transition={{ duration: 1.2, ease: PREMIUM_EASE, delay: 0.2 }}
+          className="relative h-full w-1/2 bg-[#020305] overflow-hidden border-l border-white/10 shadow-[-30px_0_60px_rgba(0,0,0,1)]"
+        >
+          <div className="absolute top-0 left-[-1px] h-full w-[100vw] flex items-center justify-center -translate-x-1/2">
+            <motion.div
+              initial={{ opacity: 0, scale: 1.5, rotateY: -45, rotateZ: -10 }}
+              animate={{ 
+                opacity: phase === "logo" ? 1 : 0, 
+                scale: 1, 
+                rotateY: 0, 
+                rotateZ: 0 
+              }}
+              transition={{ duration: 1, ease: PREMIUM_EASE }}
+              style={{ width: LOGO_DIM, height: LOGO_DIM }}
+              className="relative flex items-center justify-center"
+            >
+               <Image src="/bmw-logo-v2.png" alt="BMW" fill className="object-contain brightness-[1.1]" priority />
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Layer 3: FINAL UI REVEAL */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ 
+          opacity: phase === "final" ? 1 : 0, 
+          y: phase === "final" ? 0 : 40 
+        }}
+        transition={{ duration: 1, ease: PREMIUM_EASE, delay: 0.5 }}
+        className="section-shell relative z-30 flex h-full flex-col justify-center"
+      >
+        <div className="max-w-6xl">
+          <motion.div 
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: phase === "final" ? 1 : 0 }}
+            transition={{ duration: 1.2, ease: PREMIUM_EASE, delay: 0.8 }}
+            className="mb-12 h-px w-32 origin-left bg-gradient-to-r from-[#0066b1] to-[#00a0e9]" 
+          />
+          <h1 className="font-satoshi text-[clamp(4.5rem,11vw,12rem)] font-black leading-[0.82] tracking-[-0.03em] uppercase mb-12">
+            <span className="block text-white drop-shadow-2xl">AGGRESSIVE</span>
+            <span className="block bg-gradient-to-r from-white via-[#00a0e9] to-[#0066b1] bg-clip-text text-transparent">BY DESIGN.</span>
+          </h1>
+          <div className="flex gap-6">
+            <Button variant="primary" className="font-satoshi">Configure build</Button>
+            <Button className="font-satoshi">Explore dynamics</Button>
+          </div>
+        </div>
+      </motion.div>
+
+    </section>
+  );
+}

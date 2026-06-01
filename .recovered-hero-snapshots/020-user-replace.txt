@@ -1,0 +1,18 @@
+META {"line":309,"id":"167e0920-dfb9-4560-a9c5-a0034ffae7d6","type":"user","timestamp":"2026-06-01T06:29:17.351Z"}
+TOOL replace
+ID replace__replace_1780295345229_0
+
+Successfully modified file: C:\Users\balji\Desktop\bmw-showcase\components\Hero.tsx (1 replacements). Here is the updated code:
+...
+            zIndex: 10
+          }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <div className="relative flex items-center justify-center">
+            <h2 className="font-satoshi text-[15vw] md:text-[14vw] font-black uppercase tracking-[-0.04em] text-white/1.5 leading-none whitespace-nowrap drop-shadow-[0_0_80px_rgba(255,255,255,0.05)] [mask-image:radial-gradient(circle_at_center,black_30%,transparent_70%)]">
+              COMPETITION
+            </h2>
+            
+            {/* Center Explosion Glow (The 'Hole' in the mask) */}
+            <motion.div
+...

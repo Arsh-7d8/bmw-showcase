@@ -1,0 +1,48 @@
+META {"line":772,"id":"551c503b-bde8-416c-a457-be5d3e71cef3","type":"user","timestamp":"2026-06-01T06:54:58.020Z"}
+TOOL replace
+ID replace__replace_1780296896290_0
+
+Successfully modified file: C:\Users\balji\Desktop\bmw-showcase\components\Hero.tsx (1 replacements). Here is the updated code:
+...
+            zIndex: 10
+          }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <div className="relative flex items-center justify-center">
+            <h2 className="font-satoshi text-[15vw] md:text-[14vw] font-black uppercase tracking-[-0.04em] text-white/25 leading-none whitespace-nowrap drop-shadow-[0_0_80px_rgba(255,255,255,0.15)]">
+              COMPETITION
+            </h2>
+            <motion.div
+              style={{ opacity: glowOpacity, scale: glowScale }}
+              className="absolute w-[400px] h-[400px] bg-white rounded-full blur-[140px] mix-blend-screen -z-10"
+            />
+          </div>
+        </motion.div>
+
+        {/* Layer 2: SHUTTER SYSTEM */}
+        <div className="absolute inset-0 z-20 flex pointer-events-none overflow-hidden">
+          <motion.div
+            style={{ x: leftShutterX }}
+            className="relative h-full w-1/2 bg-[#020305] overflow-hidden border-r border-white/10 shadow-[30px_0_60px_rgba(0,0,0,1)]"
+          >
+            <div className="absolute top-0 right-[-1px] h-full w-[100vw] flex items-center justify-center translate-x-1/2">
+              <motion.div
+                style={{ 
+                  opacity: logoOpacity, 
+                  scale: logoScale, 
+                  rotateY: logoRotateY, 
+...
+            </div>
+          </motion.div>
+
+          <motion.div
+            style={{ x: rightShutterX }}
+            className="relative h-full w-1/2 bg-[#020305] overflow-hidden border-l border-white/10 shadow-[-30px_0_60px_rgba(0,0,0,1)]"
+          >
+            <div className="absolute top-0 left-[-1px] h-full w-[100vw] flex items-center justify-center -translate-x-1/2">
+              <motion.div
+                style={{ 
+                  opacity: logoOpacity, 
+                  scale: logoScale, 
+                  rotateY: logoRotateY, 
+...
