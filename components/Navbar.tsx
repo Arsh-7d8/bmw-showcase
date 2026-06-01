@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion, useTransform, useMotionValueEvent, type MotionValue } from "framer-motion";
+import { motion, useReducedMotion, useMotionValueEvent, type MotionValue, useScroll } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const navItems = [
   ["Overview", "#top"],
@@ -13,29 +13,65 @@ const navItems = [
 
 export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const prefersReducedMotion = useReducedMotion();
-  const [isRevealed, setIsRevealed] = useState(false);
-
-  // The navbar drops down tied to scroll for a connected feel.
-  const y = useTransform(scrollYProgress, [0.88, 0.91], ["-116%", "0%"]);
-  const navOpacity = useTransform(scrollYProgress, [0.88, 0.91], [0, 1]);
+  const { scrollY } = useScroll();
   
-  // Trigger the premium time-based sweep animation when crossing the threshold.
+  const [hasEntered, setHasEntered] = useState(false);
+  const [entranceComplete, setEntranceComplete] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [showNav, setShowNav] = useState(false);
+  
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Trigger entrance sequence when scrolling past the hero
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    if (latest > 0.9) {
-      if (!isRevealed) setIsRevealed(true);
-    } else {
-      if (isRevealed) setIsRevealed(false);
+    if (!hasEntered && latest > 0.9) {
+      setHasEntered(true);
+      setShowNav(true); // Drop down the background
+      
+      // Delay the logo sweep to start after the background has smoothly entered
+      setTimeout(() => {
+        setIsRevealed(true);
+        // Mark the entire entrance sequence as complete after the sweep finishes
+        setTimeout(() => setEntranceComplete(true), 2500); 
+      }, 800);
     }
   });
 
+  // Scroll-hide behavior: hide on scroll, show 2.5s after stopping
+  useMotionValueEvent(scrollY, "change", () => {
+    if (!entranceComplete) return; // Ignore scrolling during the initial entrance
+    
+    setShowNav(false);
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    scrollTimeoutRef.current = setTimeout(() => {
+      setShowNav(true);
+    }, 2500);
+  });
+
+  // Premium, "genuine" sweep speed (smooth, deliberate, not overly fast)
   const sweepTransition = {
-    duration: 1.8,
-    ease: [0.16, 1, 0.3, 1]
+    duration: 2.4,
+    ease: [0.25, 1, 0.36, 1]
+  };
+
+  // Background drop-down transition
+  const bgTransition = {
+    duration: 0.8,
+    ease: [0.32, 0.72, 0, 1]
   };
 
   return (
     <motion.nav
-      style={{ y, opacity: navOpacity }}
+      initial={{ y: "-116%", opacity: 0 }}
+      animate={{ 
+        y: hasEntered && showNav ? "0%" : "-116%", 
+        opacity: hasEntered && showNav ? 1 : 0 
+      }}
+      transition={bgTransition}
       className="fixed left-0 top-0 z-40 flex w-full items-center border-b border-white/10 bg-black/52 px-5 py-4 backdrop-blur-2xl md:px-10 md:py-6"
     >
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between">
@@ -46,9 +82,9 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
           initial={false}
           animate={{ 
             x: isRevealed ? 0 : (prefersReducedMotion ? 0 : "80vw"),
-            rotate: isRevealed ? 0 : (prefersReducedMotion ? 0 : 1080),
-            scale: isRevealed ? 1 : (prefersReducedMotion ? 1 : 1.5),
-            filter: isRevealed ? "blur(0px)" : (prefersReducedMotion ? "blur(0px)" : "blur(12px)")
+            rotate: isRevealed ? 0 : (prefersReducedMotion ? 0 : 720),
+            scale: isRevealed ? 1 : (prefersReducedMotion ? 1 : 1.2),
+            filter: isRevealed ? "blur(0px)" : (prefersReducedMotion ? "blur(0px)" : "blur(8px)")
           }}
           transition={sweepTransition}
           className="relative z-20 block"
