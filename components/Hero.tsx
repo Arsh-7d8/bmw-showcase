@@ -26,7 +26,7 @@ function buildCompetitionMask(width: number, height: number) {
         fill="white"
         text-anchor="middle"
         dominant-baseline="middle"
-        font-family="Satoshi, sans-serif"
+        font-family="Frick, sans-serif"
         font-weight="900"
         font-size="${fontSize}"
         letter-spacing="${letterSpacing}"
@@ -302,29 +302,6 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
           logoZ={logoZ}
           logoOpacity={logoOpacity}
         />
-
-        <motion.div
-          style={{ opacity: revealOpacity, y: revealY, filter: revealBlur }}
-          className="section-shell pointer-events-none absolute inset-x-0 bottom-0 z-40 pb-[clamp(3rem,8vh,7rem)]"
-        >
-          <div className="max-w-[1100px]">
-            <motion.div
-              style={{ scaleX: revealLineScale, transformOrigin: "0% 50%" }}
-              className="mb-7 h-px w-[min(34rem,70vw)] bg-[linear-gradient(90deg,rgba(232,237,242,0.95),rgba(0,160,233,0.78),transparent)]"
-            />
-            <p className="mb-5 text-[10px] font-black uppercase tracking-[0.58em] text-white/62">
-              M4 Competition
-            </p>
-            <h1 className="max-w-5xl font-frick text-[clamp(2.65rem,10.2vw,9.4rem)] uppercase leading-[0.86] tracking-[-0.035em] text-white">
-              <span className="block">Aggressive</span>
-              <span className="block text-[#dfe7ee]">By Design</span>
-            </h1>
-            <p className="mt-7 max-w-[46rem] text-base leading-7 text-white/72 md:text-lg md:leading-8">
-              A scroll-calibrated reveal built like a mechanical aperture: chrome doors, locked geometry,
-              and one continuous path into the M division surface.
-            </p>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
