@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useScroll } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import CreativeScrollProgress from "@/components/CreativeScrollProgress";
 import PerformanceReel from "@/components/PerformanceReel";
 import ModelViewer from "@/components/ModelViewer";
 import DigitalCockpit from "@/components/DigitalCockpit";
