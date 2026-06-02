@@ -1,0 +1,67 @@
+"use client";
+
+import { Canvas } from "@react-three/fiber";
+import { useGLTF, Stage, PresentationControls, Environment, ContactShadows } from "@react-three/drei";
+import { Suspense, useState } from "react";
+
+function Model({ url }: { url: string }) {
+  const { scene } = useGLTF(url);
+  return <primitive object={scene} scale={1.5} />;
+}
+
+export default function ModelViewer() {
+  const [activeModel, setActiveModel] = useState("/models/m4-adro.glb");
+
+  return (
+    <section id="catalog" className="relative z-0 min-h-screen bg-[#020305] py-32">
+      <div className="section-shell h-full flex flex-col">
+        <div className="mb-16">
+          <h2 className="font-frick text-[clamp(3rem,6vw,6rem)] uppercase leading-[0.9] tracking-tight text-white">
+            G82<br />
+            <span className="text-white/40">CONFIGURATION</span>
+          </h2>
+          <p className="mt-6 max-w-md text-sm uppercase tracking-widest text-white/60 font-frick-condensed">
+            Explore the aggressive geometry of the M4 G82 with precision body kits.
+          </p>
+        </div>
+
+        <div className="flex-1 relative min-h-[500px] border border-white/5 bg-black/40 rounded-sm overflow-hidden">
+          <Canvas dpr={[1, 2]} shadows camera={{ fov: 45 }} className="cursor-grab active:cursor-grabbing">
+            <color attach="background" args={["#020305"]} />
+            <Suspense fallback={null}>
+              <PresentationControls speed={1.5} global zoom={0.7} polar={[-0.1, Math.PI / 4]}>
+                <Stage environment="city" intensity={0.5} contactShadow={false}>
+                  <Model url={activeModel} />
+                </Stage>
+              </PresentationControls>
+              <ContactShadows position={[0, -1.5, 0]} opacity={0.75} scale={10} blur={2.5} far={4} />
+            </Suspense>
+          </Canvas>
+
+          {/* Configuration UI */}
+          <div className="absolute bottom-8 right-8 flex gap-4">
+            <button 
+              onClick={() => setActiveModel("/models/m4-adro.glb")}
+              className={`px-6 py-3 font-frick-condensed text-xs uppercase tracking-[0.3em] transition-all ${activeModel === "/models/m4-adro.glb" ? "bg-white text-black" : "bg-white/5 text-white hover:bg-white/10"}`}
+            >
+              ADRO KIT
+            </button>
+            <button 
+              onClick={() => setActiveModel("/models/m4-zacoe.glb")}
+              className={`px-6 py-3 font-frick-condensed text-xs uppercase tracking-[0.3em] transition-all ${activeModel === "/models/m4-zacoe.glb" ? "bg-white text-black" : "bg-white/5 text-white hover:bg-white/10"}`}
+            >
+              ZACOE KIT
+            </button>
+          </div>
+
+          <div className="absolute top-8 left-8">
+             <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-[#00a0e9] animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/40">3D LIVE PREVIEW</span>
+             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

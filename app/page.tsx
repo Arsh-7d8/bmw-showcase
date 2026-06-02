@@ -4,12 +4,9 @@ import { useRef } from "react";
 import { useScroll } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import CreativeScrollProgress from "@/components/CreativeScrollProgress";
-import StatsSection from "@/components/StatsSection";
-import ModelsCatalog from "@/components/ModelsCatalog";
-import StorySection from "@/components/StorySection";
-import VideoShowcase from "@/components/VideoShowcase";
-import FeatureGrid from "@/components/FeatureGrid";
+import PerformanceReel from "@/components/PerformanceReel";
+import ModelViewer from "@/components/ModelViewer";
+import DigitalCockpit from "@/components/DigitalCockpit";
 
 export default function Home() {
   const heroSectionRef = useRef<HTMLElement | null>(null);
@@ -28,11 +25,9 @@ export default function Home() {
       <Hero ref={heroSectionRef} scrollYProgress={scrollYProgress} />
 
       <div className="relative z-0">
-        <StorySection />
-        <StatsSection />
-        <VideoShowcase />
-        <ModelsCatalog />
-        <FeatureGrid />
+        <PerformanceReel />
+        <ModelViewer />
+        <DigitalCockpit />
       </div>
     </main>
   );
