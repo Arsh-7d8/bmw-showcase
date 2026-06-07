@@ -1,12 +1,69 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { useGLTF, Stage, PresentationControls, Environment, ContactShadows } from "@react-three/drei";
-import { Suspense, useState } from "react";
+import { useGLTF, Stage, PresentationControls, ContactShadows, useProgress } from "@react-three/drei";
+import { Suspense, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Preload the models at module level to start fetching immediately
+useGLTF.preload("/models/m4-adro.glb");
+useGLTF.preload("/models/m4-zacoe.glb");
 
 function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url);
   return <primitive object={scene} scale={1.5} />;
+}
+
+function Loader() {
+  const { active, progress } = useProgress();
+  const [shouldShow, setShouldShow] = useState(false);
+
+  useEffect(() => {
+    if (active && progress < 100) {
+      setShouldShow(true);
+    } else if (progress >= 100) {
+      const timer = setTimeout(() => setShouldShow(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [active, progress]);
+
+  return (
+    <AnimatePresence>
+      {shouldShow && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#020305]/90 backdrop-blur-md"
+        >
+          <div className="w-64 flex flex-col items-center">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/40">
+                LOADING M-PERFORMANCE 3D ASSETS
+              </span>
+            </div>
+            {/* M-Series styled progress bar */}
+            <div className="relative h-[2px] w-full bg-white/10 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.1 }}
+                className="h-full bg-gradient-to-r from-[#00a0e9] via-[#002f6c] to-[#e31837]"
+              />
+            </div>
+            <div className="mt-2 flex w-full justify-between">
+              <span className="font-frick-condensed text-[10px] text-white/30 uppercase tracking-widest">
+                RENDERING ENGINE
+              </span>
+              <span className="font-frick text-xs text-white">
+                {Math.round(progress)}%
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }
 
 export default function ModelViewer() {
@@ -26,6 +83,8 @@ export default function ModelViewer() {
         </div>
 
         <div className="flex-1 relative min-h-[500px] border border-white/5 bg-black/40 rounded-sm overflow-hidden">
+          <Loader />
+          
           <Canvas dpr={[1, 2]} shadows camera={{ fov: 45 }} className="cursor-grab active:cursor-grabbing">
             <color attach="background" args={["#020305"]} />
             <Suspense fallback={null}>
