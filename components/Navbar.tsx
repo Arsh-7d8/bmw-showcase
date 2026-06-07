@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion, useMotionValueEvent, type MotionValue, useScroll } from "framer-motion";
+import { motion, useReducedMotion, useMotionValueEvent, type MotionValue, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { useState, useRef } from "react";
 
@@ -13,65 +13,29 @@ const navItems = [
 
 export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const prefersReducedMotion = useReducedMotion();
-  const { scrollY } = useScroll();
-  
-  const [hasEntered, setHasEntered] = useState(false);
-  const [entranceComplete, setEntranceComplete] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [showNav, setShowNav] = useState(false);
-  
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Trigger entrance sequence when scrolling past the hero
+  // The navbar drops down tied to scroll for a connected feel.
+  const y = useTransform(scrollYProgress, [0.88, 0.91], ["-116%", "0%"]);
+  const navOpacity = useTransform(scrollYProgress, [0.88, 0.91], [0, 1]);
+
+  // Trigger the premium time-based sweep animation when crossing the threshold.
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    if (!hasEntered && latest > 0.9) {
-      setHasEntered(true);
-      setShowNav(true); // Drop down the background
-      
-      // Delay the logo sweep to start after the background has smoothly entered
-      setTimeout(() => {
-        setIsRevealed(true);
-        // Mark the entire entrance sequence as complete after the sweep finishes
-        setTimeout(() => setEntranceComplete(true), 2500); 
-      }, 800);
+    if (latest > 0.9) {
+      if (!isRevealed) setIsRevealed(true);
+    } else {
+      if (isRevealed) setIsRevealed(false);
     }
   });
 
-  // Scroll-hide behavior: hide on scroll, show 2.5s after stopping
-  useMotionValueEvent(scrollY, "change", () => {
-    if (!entranceComplete) return; // Ignore scrolling during the initial entrance
-    
-    setShowNav(false);
-    
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-    
-    scrollTimeoutRef.current = setTimeout(() => {
-      setShowNav(true);
-    }, 2500);
-  });
-
-  // Premium, "genuine" sweep speed (smooth, deliberate, not overly fast)
   const sweepTransition = {
-    duration: 2.4,
-    ease: [0.25, 1, 0.36, 1] as const
-  };
-
-  // Background drop-down transition
-  const bgTransition = {
-    duration: 0.8,
-    ease: [0.32, 0.72, 0, 1] as const
+    duration: 1.4,
+    ease: [0.22, 1, 0.36, 1] as const
   };
 
   return (
     <motion.nav
-      initial={{ y: "-116%", opacity: 0 }}
-      animate={{ 
-        y: hasEntered && showNav ? "0%" : "-116%", 
-        opacity: hasEntered && showNav ? 1 : 0 
-      }}
-      transition={bgTransition}
+      style={{ y, opacity: navOpacity }}
       className="fixed left-0 top-0 z-40 flex w-full items-center border-b border-white/10 bg-black/52 px-5 py-4 backdrop-blur-2xl md:px-10 md:py-6"
     >
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between">
@@ -82,8 +46,7 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
           initial={false}
           animate={{ 
             x: isRevealed ? 0 : (prefersReducedMotion ? 0 : "80vw"),
-            rotate: isRevealed ? 0 : (prefersReducedMotion ? 0 : 720),
-            scale: isRevealed ? 1 : (prefersReducedMotion ? 1 : 1.2)
+            rotate: isRevealed ? 0 : (prefersReducedMotion ? 0 : 720)
           }}
           transition={sweepTransition}
           className="relative z-20 block"
@@ -105,8 +68,7 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
           initial={false}
           animate={{ 
             opacity: isRevealed ? 1 : 0, 
-            clipPath: isRevealed ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 0% 100%)",
-            x: isRevealed ? 0 : -30
+            clipPath: isRevealed ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 0% 100%)"
           }}
           transition={sweepTransition}
           className="hidden flex-1 items-center justify-end pr-10 lg:flex"
