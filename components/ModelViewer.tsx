@@ -30,7 +30,7 @@ export default function ModelViewer() {
             <color attach="background" args={["#020305"]} />
             <Suspense fallback={null}>
               <PresentationControls speed={1.5} global zoom={0.7} polar={[-0.1, Math.PI / 4]}>
-                <Stage environment="city" intensity={0.5} contactShadow={false}>
+                <Stage environment="city" intensity={0.5} shadows={false}>
                   <Model url={activeModel} />
                 </Stage>
               </PresentationControls>

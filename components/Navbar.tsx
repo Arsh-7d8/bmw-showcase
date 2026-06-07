@@ -55,13 +55,13 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress: MotionVal
   // Premium, "genuine" sweep speed (smooth, deliberate, not overly fast)
   const sweepTransition = {
     duration: 2.4,
-    ease: [0.25, 1, 0.36, 1]
+    ease: [0.25, 1, 0.36, 1] as const
   };
 
   // Background drop-down transition
   const bgTransition = {
     duration: 0.8,
-    ease: [0.32, 0.72, 0, 1]
+    ease: [0.32, 0.72, 0, 1] as const
   };
 
   return (
