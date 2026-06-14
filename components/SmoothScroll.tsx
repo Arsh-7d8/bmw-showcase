@@ -2,11 +2,20 @@
 
 import { useEffect, useRef } from "react";
 import Lenis from "lenis";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
+  const isCompactViewport = useMediaQuery("(max-width: 1023px)");
+  const isTouchDevice = useMediaQuery("(pointer: coarse)");
 
   useEffect(() => {
+    if (isCompactViewport || isTouchDevice) {
+      lenisRef.current?.destroy();
+      lenisRef.current = null;
+      return;
+    }
+
     const lenis = new Lenis({
       duration: 2.2,
       easing: (t) => 1 - Math.pow(1 - t, 4), // Quartic ease-out for heavier momentum
@@ -29,7 +38,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     return () => {
       lenis.destroy();
     };
-  }, []);
+  }, [isCompactViewport, isTouchDevice]);
 
   return <>{children}</>;
 }
