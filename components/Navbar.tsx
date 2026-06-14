@@ -9,10 +9,10 @@ import { sfx } from "@/lib/audio";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 
 const navItems = [
-  ["Overview", "/#top"],
-  ["Engineering", "/engineering"],
-  ["Heritage", "/heritage"],
-  ["Catalog", "/#m-cars"],
+  ["Intro", "/#top"],
+  ["Performance", "/#performance"],
+  ["Cockpit", "/#story"],
+  ["Garage", "/#m-cars"],
 ];
 
 type NavPhase = "entrance" | "hero" | "past-hero";
@@ -29,9 +29,15 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress?: MotionVa
   const interiorTimerRef = useRef<number | null>(null);
   const fallbackScrollY = useMotionValue(0);
   const progress = scrollYProgress || fallbackScrollY;
-  const revealStart = isDesktopViewport ? 0.84 : 0;
-  const heroComplete = isDesktopViewport ? 0.955 : 0.72;
-  const interiorDelay = prefersReducedMotion ? 0 : isDesktopViewport ? 240 : 0;
+  const heroComplete = 0.72;
+  const interiorDelay = prefersReducedMotion ? 0 : isDesktopViewport ? 120 : 0;
+  const desktopRevealOffset = 1.05;
+
+  const clearInteriorTimer = () => {
+    if (interiorTimerRef.current === null) return;
+    window.clearTimeout(interiorTimerRef.current);
+    interiorTimerRef.current = null;
+  };
 
   useEffect(() => {
     let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -56,11 +62,65 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress?: MotionVa
 
   useEffect(() => {
     return () => {
-      if (interiorTimerRef.current !== null) {
-        window.clearTimeout(interiorTimerRef.current);
-      }
+      clearInteriorTimer();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isDesktopViewport) return;
+
+    let frame = 0;
+
+    const updateDesktopPhase = () => {
+      const nextPhase: NavPhase =
+        window.scrollY < window.innerHeight * desktopRevealOffset ? "entrance" : "hero";
+
+      if (nextPhase === "entrance") {
+        clearInteriorTimer();
+        if (showInteriorRef.current) {
+          showInteriorRef.current = false;
+          setShowInterior(false);
+        }
+        if (phaseRef.current !== "entrance") {
+          phaseRef.current = "entrance";
+        }
+        setPhase("entrance");
+        return;
+      }
+
+      if (phaseRef.current !== nextPhase) {
+        clearInteriorTimer();
+        phaseRef.current = nextPhase;
+        if (prefersReducedMotion) {
+          showInteriorRef.current = true;
+          setShowInterior(true);
+        } else {
+          interiorTimerRef.current = window.setTimeout(() => {
+            showInteriorRef.current = true;
+            setShowInterior(true);
+            interiorTimerRef.current = null;
+          }, interiorDelay);
+        }
+      }
+
+      setPhase(nextPhase);
+    };
+
+    const handleScroll = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updateDesktopPhase);
+    };
+
+    updateDesktopPhase();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [desktopRevealOffset, interiorDelay, isDesktopViewport, prefersReducedMotion]);
 
   useEffect(() => {
     if (isDesktopViewport) return;
@@ -77,13 +137,9 @@ export default function Navbar({ scrollYProgress }: { scrollYProgress?: MotionVa
   }, [heroComplete, isDesktopViewport, progress]);
 
   useMotionValueEvent(progress, "change", (latest) => {
-    const clearInteriorTimer = () => {
-      if (interiorTimerRef.current === null) return;
-      window.clearTimeout(interiorTimerRef.current);
-      interiorTimerRef.current = null;
-    };
+    if (isDesktopViewport) return;
 
-    if (latest < revealStart) {
+    if (latest < 0) {
       clearInteriorTimer();
       if (showInteriorRef.current) {
         showInteriorRef.current = false;

@@ -267,7 +267,6 @@ function MCarModel({
 
       child.castShadow = false;
       child.receiveShadow = false;
-      child.frustumCulled = false;
 
       const tune = car.materialMode === "preserve" ? preserveMaterial : (entry: THREE.Material) => tuneMaterial(entry, car.paint);
       child.material = Array.isArray(child.material)
@@ -517,7 +516,7 @@ function ReflectivePlatform() {
         opacity={0.52}
         blur={2.6}
         far={2.2}
-        resolution={2048}
+        resolution={1024}
         frames={1}
         color="#000000"
       />
@@ -593,7 +592,8 @@ function StudioScene({
   return (
     <Canvas
       frameloop="demand"
-      dpr={[1, 1.8]}
+      dpr={[1, 1.35]}
+      performance={{ min: 0.7 }}
       gl={{
         antialias: true,
         alpha: true,
@@ -606,7 +606,7 @@ function StudioScene({
       <SceneCamera />
       <CameraFrame />
       <color attach="background" args={["#030405"]} />
-      <Environment resolution={2048} environmentIntensity={1.18}>
+      <Environment resolution={1024} environmentIntensity={1.18}>
         <Lightformer form="rect" intensity={4.6} position={[0, 4, 5]} scale={[7, 1.2, 1]} />
         <Lightformer form="rect" intensity={3.2} position={[-4.2, 2.4, 2.8]} rotation-y={Math.PI / 4} scale={[1.2, 3.8, 1]} />
         <Lightformer form="rect" intensity={2.6} position={[4.4, 2.2, 2.2]} rotation-y={-Math.PI / 4} scale={[1, 3.4, 1]} />
@@ -641,15 +641,36 @@ function StudioScene({
 
 export default function MCarShowcase() {
   const prefersReducedMotion = useReducedMotion();
+  const sectionRef = useRef<HTMLElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [startPulse, setStartPulse] = useState(0);
   const [travelKey, setTravelKey] = useState(0);
   const [travelDirection, setTravelDirection] = useState(1);
+  const [sceneActivated, setSceneActivated] = useState(false);
   const [readyCars, setReadyCars] = useState<Set<string>>(() => new Set());
   const activeCar = cars[activeIndex];
-  const activeCarReady = readyCars.has(activeCar.id);
+  const activeCarReady = !sceneActivated || readyCars.has(activeCar.id);
 
   useEffect(() => {
+    const node = sectionRef.current;
+    if (!node || sceneActivated) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setSceneActivated(true);
+        observer.disconnect();
+      },
+      { rootMargin: "1400px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [sceneActivated]);
+
+  useEffect(() => {
+    if (!sceneActivated) return;
+
     let cancelled = false;
     let idleHandle: ReturnType<typeof globalThis.setTimeout> | null = null;
 
@@ -660,7 +681,7 @@ export default function MCarShowcase() {
       });
     };
 
-    idleHandle = globalThis.setTimeout(preloadRemainingCars, 750);
+    idleHandle = globalThis.setTimeout(preloadRemainingCars, 1800);
 
     return () => {
       cancelled = true;
@@ -668,7 +689,7 @@ export default function MCarShowcase() {
         globalThis.clearTimeout(idleHandle);
       }
     };
-  }, []);
+  }, [sceneActivated]);
 
   const triggerStart = () => {
     if (prefersReducedMotion) return;
@@ -689,6 +710,7 @@ export default function MCarShowcase() {
 
   return (
     <section
+      ref={sectionRef}
       id="m-cars"
       className="relative z-0 overflow-hidden bg-[linear-gradient(180deg,#000000_0%,#040506_42%,#000000_100%)] py-24 text-white md:py-32 lg:py-36"
     >
@@ -766,21 +788,23 @@ export default function MCarShowcase() {
           </button>
 
           <div className="absolute inset-0">
-            <StudioScene
-              car={activeCar}
-              startPulse={startPulse}
-              travelKey={travelKey}
-              travelDirection={travelDirection}
-              onStart={triggerStart}
-              onModelReady={(carId) => {
-                setReadyCars((current) => {
-                  if (current.has(carId)) return current;
-                  const next = new Set(current);
-                  next.add(carId);
-                  return next;
-                });
-              }}
-            />
+            {sceneActivated ? (
+              <StudioScene
+                car={activeCar}
+                startPulse={startPulse}
+                travelKey={travelKey}
+                travelDirection={travelDirection}
+                onStart={triggerStart}
+                onModelReady={(carId) => {
+                  setReadyCars((current) => {
+                    if (current.has(carId)) return current;
+                    const next = new Set(current);
+                    next.add(carId);
+                    return next;
+                  });
+                }}
+              />
+            ) : null}
           </div>
           <DriveTransitionOverlay
             active={travelKey > 0 && !prefersReducedMotion}
