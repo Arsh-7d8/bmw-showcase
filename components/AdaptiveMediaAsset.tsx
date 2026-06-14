@@ -4,12 +4,12 @@ import { useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { BmwMediaAsset } from "@/lib/bmwMedia";
-import { useMediaQuery } from "@/lib/useMediaQuery";
+import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
 type AdaptiveMediaAssetProps = {
   asset: BmwMediaAsset;
-  compactVideo?: boolean;
   imageClassName: string;
+  playStrategy?: "auto" | "hover" | "off";
   priority?: boolean;
   sizes: string;
   videoClassName: string;
@@ -17,16 +17,17 @@ type AdaptiveMediaAssetProps = {
 
 export default function AdaptiveMediaAsset({
   asset,
-  compactVideo = false,
   imageClassName,
+  playStrategy = "auto",
   priority = false,
   sizes,
   videoClassName,
 }: AdaptiveMediaAssetProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const prefersReducedMotion = useReducedMotion();
-  const isCompactViewport = useMediaQuery("(max-width: 1023px)");
+  const { allowAmbientVideoAutoplay } = usePerformanceMode();
   const [isNearViewport, setIsNearViewport] = useState(false);
+  const [isEngaged, setIsEngaged] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
   useEffect(() => {
@@ -48,14 +49,25 @@ export default function AdaptiveMediaAsset({
     return () => observer.disconnect();
   }, [asset.kind, prefersReducedMotion]);
 
+  const effectivePlayStrategy =
+    playStrategy === "auto" && !allowAmbientVideoAutoplay ? "hover" : playStrategy;
+
   const shouldRenderVideo =
     asset.kind === "video" &&
     !videoFailed &&
     !prefersReducedMotion &&
-    (priority || isNearViewport);
+    (priority || isNearViewport) &&
+    (effectivePlayStrategy === "auto" || (effectivePlayStrategy === "hover" && isEngaged));
 
   return (
-    <div ref={hostRef} className="absolute inset-0">
+    <div
+      ref={hostRef}
+      className="absolute inset-0"
+      onPointerEnter={() => setIsEngaged(true)}
+      onPointerLeave={() => setIsEngaged(false)}
+      onFocus={() => setIsEngaged(true)}
+      onBlur={() => setIsEngaged(false)}
+    >
       {shouldRenderVideo ? (
         <video
           className={videoClassName}
@@ -78,7 +90,6 @@ export default function AdaptiveMediaAsset({
           alt={asset.title}
           fill
           priority={priority}
-          loading={isCompactViewport ? "eager" : undefined}
           sizes={sizes}
           className={imageClassName}
         />

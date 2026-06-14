@@ -12,6 +12,7 @@ import type { MotionValue } from "framer-motion";
 import { forwardRef, memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { sfx } from "@/lib/audio";
 import { useMediaQuery } from "@/lib/useMediaQuery";
+import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
 function buildCompetitionWordmark(width: number, height: number) {
   const safeWidth = Math.max(width, 390);
@@ -31,14 +32,18 @@ function buildCompetitionWordmark(width: number, height: number) {
 }
 
 const CompetitionLens = memo(function CompetitionLens({
+  active,
   scale,
   opacity,
+  useVideoFill,
   y,
   videoScale,
   videoFilter,
 }: {
+  active: boolean;
   scale: MotionValue<number>;
   opacity: MotionValue<number>;
+  useVideoFill: boolean;
   y: MotionValue<string>;
   videoScale: MotionValue<number>;
   videoFilter: MotionValue<string>;
@@ -123,8 +128,8 @@ const CompetitionLens = memo(function CompetitionLens({
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_18%,transparent_82%,rgba(255,255,255,0.015))]" />
       <motion.div
         style={{
-          scale: fontReady ? videoScale : 1,
-          filter: fontReady ? videoFilter : "none",
+          scale: fontReady && useVideoFill ? videoScale : 1,
+          filter: fontReady && useVideoFill ? videoFilter : "none",
           opacity: fontReady ? 1 : 0,
           willChange: "transform, opacity, filter",
         }}
@@ -153,18 +158,20 @@ const CompetitionLens = memo(function CompetitionLens({
               </text>
             </clipPath>
           </defs>
-          <g clipPath={`url(#${clipPathId})`}>
-            <foreignObject x="0" y="0" width={wordmark.safeWidth} height={wordmark.safeHeight}>
-              <div className="h-full w-full">
-                <video autoPlay muted loop playsInline preload="auto" className="h-full w-full object-cover">
-                  <source src="/hero.mp4" type="video/mp4" />
-                </video>
-              </div>
-            </foreignObject>
-          </g>
+          {active && useVideoFill ? (
+            <g clipPath={`url(#${clipPathId})`}>
+              <foreignObject x="0" y="0" width={wordmark.safeWidth} height={wordmark.safeHeight}>
+                <div className="h-full w-full">
+                  <video autoPlay muted loop playsInline preload="metadata" className="h-full w-full object-cover">
+                    <source src="/hero.mp4" type="video/mp4" />
+                  </video>
+                </div>
+              </foreignObject>
+            </g>
+          ) : null}
         </svg>
       </motion.div>
-      {!fontReady ? (
+      {!fontReady || !useVideoFill ? (
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="font-frick text-[min(15vw,8.875rem)] uppercase tracking-[0.04em] text-white">
             Competition
@@ -282,7 +289,9 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const isMobileViewport = useMediaQuery("(max-width: 767px)");
   const isCompactViewport = useMediaQuery("(max-width: 1023px)");
+  const { allowHeroMaskVideo } = usePerformanceMode();
   const [isHeroVideoActive, setIsHeroVideoActive] = useState(true);
+  const [isLensActive, setIsLensActive] = useState(true);
 
   const progress = useSpring(scrollYProgress, {
     stiffness: 170,
@@ -299,6 +308,9 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
     } else if (latest < 0.1) {
       hasPlayedBass.current = false; // reset if scrolled back to very top
     }
+
+    const nextLensState = latest < 0.82;
+    setIsLensActive((current) => (current === nextLensState ? current : nextLensState));
   });
 
   const videoFilter = useTransform(
@@ -378,8 +390,6 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
   };
 
   useEffect(() => {
-    if (!isCompactViewport) return;
-
     const node = heroSectionRef.current;
     if (!node) return;
 
@@ -392,7 +402,7 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [isCompactViewport]);
+  }, []);
 
   useEffect(() => {
     const video = heroVideoRef.current;
@@ -403,12 +413,14 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
       video.playsInline = true;
       video.setAttribute("muted", "");
       video.setAttribute("playsinline", "");
-      video.load();
+      if (video.readyState === 0) {
+        video.load();
+      }
       void video.play().catch(() => {});
     };
 
     const handleReady = () => {
-      if (!isCompactViewport || isHeroVideoActive) {
+      if (isHeroVideoActive) {
         tryPlay();
       }
     };
@@ -418,11 +430,11 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
     video.addEventListener("playing", handleReady);
     document.addEventListener("visibilitychange", handleReady);
 
-    if (!isCompactViewport || isHeroVideoActive) {
+    if (isHeroVideoActive) {
       tryPlay();
     }
 
-    if (isCompactViewport && !isHeroVideoActive) {
+    if (!isHeroVideoActive) {
       video.pause();
     }
 
@@ -432,7 +444,7 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
       video.removeEventListener("playing", handleReady);
       document.removeEventListener("visibilitychange", handleReady);
     };
-  }, [isCompactViewport, isHeroVideoActive]);
+  }, [isHeroVideoActive]);
 
   if (isMobileViewport) {
     return (
@@ -444,7 +456,7 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             className="h-full w-full object-cover"
           >
             <source src="/hero.mp4" type="video/mp4" />
@@ -460,7 +472,7 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
     <section ref={assignSectionRef} id="top" className="relative h-[320dvh] bg-[#020305] sm:h-[350dvh] md:h-[400dvh] lg:h-[520dvh]">
       <div className="sticky top-0 h-[100dvh] overflow-hidden">
         <motion.div style={{ scale: videoScale, filter: videoFilter, willChange: "transform, filter" }} className="absolute inset-0 z-0 [contain:paint]">
-          <video ref={heroVideoRef} autoPlay muted loop playsInline preload="auto" className="h-full w-full object-cover">
+          <video ref={heroVideoRef} autoPlay muted loop playsInline preload="metadata" className="h-full w-full object-cover">
             <source src="/hero.mp4" type="video/mp4" />
           </video>
         </motion.div>
@@ -476,8 +488,10 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
         />
 
         <CompetitionLens
+          active={isLensActive}
           scale={lensScale}
           opacity={lensOpacity}
+          useVideoFill={allowHeroMaskVideo}
           y={lensY}
           videoScale={lensVideoScale}
           videoFilter={lensVideoFilter}

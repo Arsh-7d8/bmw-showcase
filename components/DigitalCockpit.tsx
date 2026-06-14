@@ -26,6 +26,7 @@ function MediaPanel({
         <AdaptiveMediaAsset
           asset={item}
           sizes={sizes}
+          playStrategy="hover"
           imageClassName="object-cover transition-transform duration-1000 group-hover:scale-105"
           videoClassName="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
         />

@@ -3,14 +3,16 @@
 import { useEffect, useRef } from "react";
 import Lenis from "lenis";
 import { useMediaQuery } from "@/lib/useMediaQuery";
+import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
   const isCompactViewport = useMediaQuery("(max-width: 1023px)");
   const isTouchDevice = useMediaQuery("(pointer: coarse)");
+  const { allowSmoothScroll } = usePerformanceMode();
 
   useEffect(() => {
-    if (isCompactViewport || isTouchDevice) {
+    if (isCompactViewport || isTouchDevice || !allowSmoothScroll) {
       lenisRef.current?.destroy();
       lenisRef.current = null;
       return;
@@ -38,7 +40,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     return () => {
       lenis.destroy();
     };
-  }, [isCompactViewport, isTouchDevice]);
+  }, [allowSmoothScroll, isCompactViewport, isTouchDevice]);
 
   return <>{children}</>;
 }

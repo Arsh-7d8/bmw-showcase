@@ -39,6 +39,7 @@ export default function PerformanceReel() {
               <AdaptiveMediaAsset
                 asset={item}
                 sizes="(min-width: 768px) 50vw, 100vw"
+                playStrategy="hover"
                 imageClassName="object-cover brightness-75 grayscale transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-100 group-hover:grayscale-0"
                 videoClassName="h-full w-full object-cover brightness-[0.82] transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-100"
               />
