@@ -56,7 +56,7 @@ const cars: CarModelConfig[] = [
     displayScale: 1.03,
   },
 ];
-cars.forEach((car) => useGLTF.preload(car.url));
+useGLTF.preload(cars[0].url);
 
 const clamp01 = (value: number) => THREE.MathUtils.clamp(value, 0, 1);
 const easeInCubic = (value: number) => value * value * value;
@@ -236,12 +236,14 @@ function MCarModel({
   travelKey,
   travelRole,
   travelDirection,
+  onReady,
 }: {
   car: CarModelConfig;
   startPulse: number;
   travelKey: number;
   travelRole: "current" | "entering" | "exiting";
   travelDirection: number;
+  onReady: (carId: string) => void;
 }) {
   const { scene } = useGLTF(car.url);
   const rootRef = useRef<THREE.Group>(null);
@@ -321,6 +323,10 @@ function MCarModel({
   useEffect(() => {
     wheelRefs.current = wheelMeshes;
   }, [wheelMeshes]);
+
+  useEffect(() => {
+    onReady(car.id);
+  }, [car.id, onReady]);
 
   useEffect(() => {
     travelStartRef.current = performance.now() / 1000;
@@ -575,17 +581,19 @@ function StudioScene({
   travelKey,
   travelDirection,
   onStart,
+  onModelReady,
 }: {
   car: CarModelConfig;
   startPulse: number;
   travelKey: number;
   travelDirection: number;
   onStart: () => void;
+  onModelReady: (carId: string) => void;
 }) {
   return (
     <Canvas
-      frameloop="always"
-      dpr={[1.2, 2.4]}
+      frameloop="demand"
+      dpr={[1, 1.8]}
       gl={{
         antialias: true,
         alpha: true,
@@ -622,6 +630,7 @@ function StudioScene({
             travelKey={travelKey}
             travelRole={travelKey === 0 ? "current" : "entering"}
             travelDirection={travelDirection}
+            onReady={onModelReady}
           />
         </Suspense>
       </group>
@@ -636,7 +645,30 @@ export default function MCarShowcase() {
   const [startPulse, setStartPulse] = useState(0);
   const [travelKey, setTravelKey] = useState(0);
   const [travelDirection, setTravelDirection] = useState(1);
+  const [readyCars, setReadyCars] = useState<Set<string>>(() => new Set());
   const activeCar = cars[activeIndex];
+  const activeCarReady = readyCars.has(activeCar.id);
+
+  useEffect(() => {
+    let cancelled = false;
+    let idleHandle: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+    const preloadRemainingCars = () => {
+      if (cancelled) return;
+      cars.slice(1).forEach((car) => {
+        useGLTF.preload(car.url);
+      });
+    };
+
+    idleHandle = globalThis.setTimeout(preloadRemainingCars, 750);
+
+    return () => {
+      cancelled = true;
+      if (idleHandle !== null) {
+        globalThis.clearTimeout(idleHandle);
+      }
+    };
+  }, []);
 
   const triggerStart = () => {
     if (prefersReducedMotion) return;
@@ -740,6 +772,14 @@ export default function MCarShowcase() {
               travelKey={travelKey}
               travelDirection={travelDirection}
               onStart={triggerStart}
+              onModelReady={(carId) => {
+                setReadyCars((current) => {
+                  if (current.has(carId)) return current;
+                  const next = new Set(current);
+                  next.add(carId);
+                  return next;
+                });
+              }}
             />
           </div>
           <DriveTransitionOverlay
@@ -747,6 +787,14 @@ export default function MCarShowcase() {
             direction={travelDirection}
             travelKey={travelKey}
           />
+
+          {!activeCarReady ? (
+            <div className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center">
+              <div className="border border-white/12 bg-black/45 px-4 py-2 font-frick-condensed text-[0.68rem] uppercase tracking-[0.26em] text-white/60">
+                Loading model
+              </div>
+            </div>
+          ) : null}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,28,48,0.42)_42%,rgba(0,0,0,0.88)_100%)] p-4 sm:p-5 md:p-6">
             <div className="pointer-events-auto grid gap-3 sm:gap-4 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:items-end">

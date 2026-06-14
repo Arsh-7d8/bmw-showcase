@@ -398,12 +398,40 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
     const video = heroVideoRef.current;
     if (!video) return;
 
-    if (!isCompactViewport || isHeroVideoActive) {
+    const tryPlay = () => {
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute("muted", "");
+      video.setAttribute("playsinline", "");
+      video.load();
       void video.play().catch(() => {});
-      return;
+    };
+
+    const handleReady = () => {
+      if (!isCompactViewport || isHeroVideoActive) {
+        tryPlay();
+      }
+    };
+
+    video.addEventListener("loadedmetadata", handleReady);
+    video.addEventListener("canplay", handleReady);
+    video.addEventListener("playing", handleReady);
+    document.addEventListener("visibilitychange", handleReady);
+
+    if (!isCompactViewport || isHeroVideoActive) {
+      tryPlay();
     }
 
-    video.pause();
+    if (isCompactViewport && !isHeroVideoActive) {
+      video.pause();
+    }
+
+    return () => {
+      video.removeEventListener("loadedmetadata", handleReady);
+      video.removeEventListener("canplay", handleReady);
+      video.removeEventListener("playing", handleReady);
+      document.removeEventListener("visibilitychange", handleReady);
+    };
   }, [isCompactViewport, isHeroVideoActive]);
 
   if (isMobileViewport) {
