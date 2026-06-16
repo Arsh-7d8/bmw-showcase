@@ -7,6 +7,7 @@ import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
+  const rafRef = useRef<number | null>(null);
   const isCompactViewport = useMediaQuery("(max-width: 1023px)");
   const isTouchDevice = useMediaQuery("(pointer: coarse)");
   const { allowSmoothScroll } = usePerformanceMode();
@@ -32,13 +33,18 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     function raf(time: number) {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      rafRef.current = window.requestAnimationFrame(raf);
     }
 
-    requestAnimationFrame(raf);
+    rafRef.current = window.requestAnimationFrame(raf);
 
     return () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       lenis.destroy();
+      lenisRef.current = null;
     };
   }, [allowSmoothScroll, isCompactViewport, isTouchDevice]);
 

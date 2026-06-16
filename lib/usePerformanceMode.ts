@@ -41,15 +41,28 @@ function readPerformanceMode(): PerformanceMode {
   const connection = nav.connection;
   const saveData = connection?.saveData ?? false;
   const effectiveType = connection?.effectiveType ?? "";
-  const slowNetwork = effectiveType.includes("2g");
-  const reducedBudget = saveData || slowNetwork || deviceMemory <= 4 || hardwareConcurrency <= 4;
-  const constrained = reducedBudget || deviceMemory <= 6 || hardwareConcurrency <= 6;
+  const slowNetwork = effectiveType.includes("2g") || effectiveType === "3g";
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const compactViewport = window.innerWidth < 1280;
+  const reducedBudget =
+    saveData ||
+    slowNetwork ||
+    reducedMotion ||
+    deviceMemory <= 6 ||
+    hardwareConcurrency <= 6;
+  const constrained =
+    reducedBudget ||
+    coarsePointer ||
+    compactViewport ||
+    deviceMemory <= 8 ||
+    hardwareConcurrency <= 8;
 
   return {
     allowAmbientVideoAutoplay: !constrained,
-    allowHeroMaskVideo: !reducedBudget,
-    allowInteractiveGarage: !reducedBudget,
-    allowSmoothScroll: !constrained,
+    allowHeroMaskVideo: !reducedBudget && !compactViewport && !coarsePointer,
+    allowInteractiveGarage: !constrained && deviceMemory >= 12 && hardwareConcurrency >= 8,
+    allowSmoothScroll: false,
     isLowPower: constrained,
   };
 }

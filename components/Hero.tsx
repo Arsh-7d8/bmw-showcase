@@ -11,6 +11,7 @@ import {
 import type { MotionValue } from "framer-motion";
 import { forwardRef, memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { sfx } from "@/lib/audio";
+import { compactHeroStill } from "@/lib/bmwMedia";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
@@ -160,13 +161,14 @@ const CompetitionLens = memo(function CompetitionLens({
           </defs>
           {active && useVideoFill ? (
             <g clipPath={`url(#${clipPathId})`}>
-              <foreignObject x="0" y="0" width={wordmark.safeWidth} height={wordmark.safeHeight}>
-                <div className="h-full w-full">
-                  <video autoPlay muted loop playsInline preload="metadata" className="h-full w-full object-cover">
-                    <source src="/hero.mp4" type="video/mp4" />
-                  </video>
-                </div>
-              </foreignObject>
+              <image
+                href={compactHeroStill}
+                x="0"
+                y="0"
+                width={wordmark.safeWidth}
+                height={wordmark.safeHeight}
+                preserveAspectRatio="xMidYMid slice"
+              />
             </g>
           ) : null}
         </svg>
@@ -289,9 +291,10 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const isMobileViewport = useMediaQuery("(max-width: 767px)");
   const isCompactViewport = useMediaQuery("(max-width: 1023px)");
-  const { allowHeroMaskVideo } = usePerformanceMode();
+  const { allowAmbientVideoAutoplay, allowHeroMaskVideo } = usePerformanceMode();
   const [isHeroVideoActive, setIsHeroVideoActive] = useState(true);
   const [isLensActive, setIsLensActive] = useState(true);
+  const shouldRenderHeroVideo = allowAmbientVideoAutoplay && !prefersReducedMotion && !isMobileViewport;
 
   const progress = useSpring(scrollYProgress, {
     stiffness: 170,
@@ -405,6 +408,10 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
   }, []);
 
   useEffect(() => {
+    if (!shouldRenderHeroVideo) {
+      return;
+    }
+
     const video = heroVideoRef.current;
     if (!video) return;
 
@@ -444,23 +451,20 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
       video.removeEventListener("playing", handleReady);
       document.removeEventListener("visibilitychange", handleReady);
     };
-  }, [isHeroVideoActive]);
+  }, [isHeroVideoActive, shouldRenderHeroVideo]);
 
   if (isMobileViewport) {
     return (
       <section ref={assignSectionRef} id="top" className="relative min-h-[100dvh] overflow-hidden bg-[#020305]">
         <div className="relative h-[100dvh]">
-          <video
-            ref={heroVideoRef}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="h-full w-full object-cover"
-          >
-            <source src="/hero.mp4" type="video/mp4" />
-          </video>
+          <Image
+            src={compactHeroStill}
+            alt="BMW M hero frame"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_38%,rgba(0,102,177,0.18),transparent_32%),linear-gradient(180deg,rgba(2,3,5,0.18)_0%,rgba(2,3,5,0.44)_58%,rgba(2,3,5,0.94)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(180deg,rgba(2,3,5,0),#020305_100%)]" />
         </div>
@@ -472,9 +476,28 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
     <section ref={assignSectionRef} id="top" className="relative h-[320dvh] bg-[#020305] sm:h-[350dvh] md:h-[400dvh] lg:h-[520dvh]">
       <div className="sticky top-0 h-[100dvh] overflow-hidden">
         <motion.div style={{ scale: videoScale, filter: videoFilter, willChange: "transform, filter" }} className="absolute inset-0 z-0 [contain:paint]">
-          <video ref={heroVideoRef} autoPlay muted loop playsInline preload="metadata" className="h-full w-full object-cover">
-            <source src="/hero.mp4" type="video/mp4" />
-          </video>
+          <Image
+            src={compactHeroStill}
+            alt="BMW M hero frame"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          {shouldRenderHeroVideo ? (
+            <video
+              ref={heroVideoRef}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="none"
+              poster={compactHeroStill}
+              className="absolute inset-0 h-full w-full object-cover"
+            >
+              <source src="/hero.mp4" type="video/mp4" />
+            </video>
+          ) : null}
         </motion.div>
         <div className="absolute inset-0 z-[1] bg-[radial-gradient(circle_at_50%_45%,transparent_0%,rgba(2,3,5,0.34)_46%,rgba(2,3,5,0.82)_100%)]" />
         <motion.div

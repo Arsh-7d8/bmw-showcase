@@ -1,11 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Power } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import SectionHeading from "@/components/SectionHeading";
 import type { MCarSceneCarConfig } from "@/components/MCarStudioScene";
+import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
 const DeferredStudioScene = dynamic(() => import("@/components/MCarStudioScene"), {
   ssr: false,
@@ -91,36 +93,22 @@ function DriveTransitionOverlay({
 
 export default function MCarShowcase() {
   const prefersReducedMotion = useReducedMotion();
-  const sectionRef = useRef<HTMLElement | null>(null);
+  const { allowInteractiveGarage } = usePerformanceMode();
   const [activeIndex, setActiveIndex] = useState(0);
   const [startPulse, setStartPulse] = useState(0);
   const [travelKey, setTravelKey] = useState(0);
   const [travelDirection, setTravelDirection] = useState(1);
-  const [sceneActivated, setSceneActivated] = useState(false);
+  const [sceneEnabled, setSceneEnabled] = useState(false);
   const [readyCars, setReadyCars] = useState<Set<string>>(() => new Set());
 
   const activeCar = cars[activeIndex];
-  const activeCarReady = !sceneActivated || readyCars.has(activeCar.id);
-  const canMountScene = sceneActivated;
-
-  useEffect(() => {
-    const node = sectionRef.current;
-    if (!node || sceneActivated) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        setSceneActivated(true);
-        observer.disconnect();
-      },
-      { rootMargin: "320px 0px" }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [sceneActivated]);
+  const canMountScene = allowInteractiveGarage && sceneEnabled;
+  const activeCarReady = !canMountScene || readyCars.has(activeCar.id);
 
   const triggerStart = () => {
+    if (!sceneEnabled && allowInteractiveGarage) {
+      setSceneEnabled(true);
+    }
     if (prefersReducedMotion) return;
     setStartPulse((value) => value + 1);
   };
@@ -139,7 +127,6 @@ export default function MCarShowcase() {
 
   return (
     <section
-      ref={sectionRef}
       id="m-cars"
       className="relative z-0 overflow-hidden bg-[linear-gradient(180deg,#000000_0%,#040506_42%,#000000_100%)] py-24 text-white md:py-32 lg:py-36"
     >
@@ -194,7 +181,7 @@ export default function MCarShowcase() {
               className="flex items-center gap-3 border border-white/18 bg-black/36 px-5 py-4 font-frick-condensed text-[0.72rem] uppercase tracking-[0.24em] text-white transition-colors hover:bg-white hover:text-black sm:px-6"
             >
               <Power size={14} strokeWidth={1.7} />
-              Start
+              {allowInteractiveGarage ? (sceneEnabled ? "Restart" : "Start 3D") : "Static View"}
             </button>
           </div>
 
@@ -217,6 +204,16 @@ export default function MCarShowcase() {
           </button>
 
           <div className="absolute inset-0">
+            {!canMountScene ? (
+              <Image
+                src="/tablet-garage-after.png"
+                alt={`${activeCar.name} garage preview`}
+                fill
+                priority={false}
+                sizes="100vw"
+                className="object-cover opacity-80"
+              />
+            ) : null}
             {canMountScene ? (
               <DeferredStudioScene
                 car={activeCar}
@@ -247,6 +244,16 @@ export default function MCarShowcase() {
               <div className="border border-white/12 bg-black/45 px-4 py-2 font-frick-condensed text-[0.68rem] uppercase tracking-[0.26em] text-white/60">
                 Loading model
               </div>
+            </div>
+          ) : null}
+
+          {!allowInteractiveGarage ? (
+            <div className="pointer-events-none absolute left-4 top-[6.5rem] z-[11] border border-white/10 bg-black/42 px-4 py-2 font-frick-condensed text-[0.62rem] uppercase tracking-[0.22em] text-white/56 sm:left-5 md:left-8">
+              Static garage kept here to stop browser spikes.
+            </div>
+          ) : !sceneEnabled ? (
+            <div className="pointer-events-none absolute left-4 top-[6.5rem] z-[11] border border-white/10 bg-black/42 px-4 py-2 font-frick-condensed text-[0.62rem] uppercase tracking-[0.22em] text-white/56 sm:left-5 md:left-8">
+              3D loads only after Start.
             </div>
           ) : null}
 
