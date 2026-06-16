@@ -1,0 +1,20 @@
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\balji\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\balji\Desktop\bmw-showcase\package-lock.json
+
+[browser] ⨯ unhandledRejection: ChunkLoadError: Failed to load chunk /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_00apzm6._.js from module [turbopack]/browser/dev/hmr-client/hmr-client.ts [app-client] (ecmascript, async loader)
+[browser] NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied.
+NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied. (file://C:/Users/balji/Desktop/bmw-showcase/.next/dev/static/chunks/0r77_next_dist_compiled_next-devtools_index_1391r6i.js:2101:1285)
+[browser] NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied.
+NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied. (file://C:/Users/balji/Desktop/bmw-showcase/.next/dev/static/chunks/0r77_next_dist_compiled_next-devtools_index_1391r6i.js:2101:1285)
+Debugger listening on ws://127.0.0.1:9229/9a68397f-820a-4de4-9975-917cbd3706f4
+For help, see: https://nodejs.org/en/docs/inspector
+[browser] NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied.
+NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied. (file://C:/Users/balji/Desktop/bmw-showcase/.next/dev/static/chunks/0r77_next_dist_compiled_next-devtools_index_1391r6i.js:2101:1285)
+[browser] NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied.
+NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied. (file://C:/Users/balji/Desktop/bmw-showcase/.next/dev/static/chunks/0r77_next_dist_compiled_next-devtools_index_1391r6i.js:2101:1285)
+[browser] NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied.
+NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied. (file://C:/Users/balji/Desktop/bmw-showcase/.next/dev/static/chunks/0r77_next_dist_compiled_next-devtools_index_1391r6i.js:2101:1285)
