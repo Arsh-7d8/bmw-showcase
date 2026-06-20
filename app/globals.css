@@ -27,9 +27,12 @@
   --color-accent: #ffffff;
   --color-carbon: #020305;
   --color-carbon-soft: #10151d;
+  --color-carbon-panel: #090d13;
+  --color-carbon-panel-2: #0d1219;
   --color-chrome: #e8edf2;
   --color-crimson: #b11f2a;
   --color-fog: #94a3b8;
+  --color-steel: #cbd6e2;
 }
 
 @layer base {
@@ -52,9 +55,13 @@
     font-weight: 300;
     margin: 0;
     padding: 0;
-    background-color: #020305;
+    background:
+      radial-gradient(circle at top, rgba(0, 102, 177, 0.12), transparent 24%),
+      radial-gradient(circle at 85% 20%, rgba(177, 31, 42, 0.08), transparent 20%),
+      linear-gradient(180deg, #05070a 0%, #020305 32%, #020305 100%);
     overflow-x: clip;
   }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-satoshi);
     @apply font-black uppercase tracking-tighter;
@@ -85,7 +92,7 @@
   }
 
   .section-shell {
-    @apply mx-auto w-full max-w-[1500px] px-5 md:px-8;
+    @apply mx-auto w-full max-w-[1580px] px-5 md:px-8 lg:px-10;
   }
 
   .grid-veil {
@@ -105,8 +112,36 @@
     @apply rounded-[2.5rem] bg-white/[0.03] p-2 ring-1 ring-white/10;
   }
 
+  .metal-shell {
+    @apply rounded-[2rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-[1px];
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 24px 80px rgba(0, 0, 0, 0.28);
+  }
+
+  .metal-core {
+    @apply rounded-[calc(2rem-1px)] border border-white/8 bg-[linear-gradient(180deg,rgba(9,13,19,0.98),rgba(4,6,10,0.98))];
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
   .media-frame {
     @apply relative overflow-hidden rounded-[2rem] bg-white/[0.02] ring-1 ring-white/10;
+  }
+
+  .display-caption {
+    @apply text-[0.72rem] font-medium uppercase tracking-[0.28em] text-white/45;
+  }
+
+  .quiet-label {
+    @apply text-[0.7rem] font-medium uppercase tracking-[0.24em] text-white/42;
+  }
+
+  .section-copy {
+    @apply max-w-[56ch] text-sm leading-7 text-[#c2ccd7] md:text-[1rem];
+  }
+
+  .accent-rule {
+    background: linear-gradient(90deg, #1d4f91 0%, #46b5ff 52%, #e53b35 100%);
   }
 
   .chapter-line {
