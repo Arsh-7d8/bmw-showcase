@@ -55,9 +55,14 @@ function computePerformanceMode(): PerformanceMode {
     hardwareConcurrency <= 8;
 
   return {
-    allowAmbientVideoAutoplay: !constrained,
+    allowAmbientVideoAutoplay: !constrained && deviceMemory >= 8 && hardwareConcurrency >= 8,
     allowHeroMaskVideo: !reducedBudget && !compactViewport && !coarsePointer,
-    allowInteractiveGarage: !constrained && deviceMemory >= 12 && hardwareConcurrency >= 8,
+    allowInteractiveGarage:
+      !reducedBudget &&
+      !compactViewport &&
+      !coarsePointer &&
+      deviceMemory >= 8 &&
+      hardwareConcurrency >= 8,
     allowSmoothScroll: false,
     isLowPower: constrained,
   };

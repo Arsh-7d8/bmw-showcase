@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, Component, type ReactNode, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
@@ -10,12 +10,31 @@ import {
   OrbitControls,
   OrthographicCamera,
   useGLTF,
+  useProgress,
 } from "@react-three/drei";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import SectionHeading from "@/components/SectionHeading";
+import { usePerformanceMode } from "@/lib/usePerformanceMode";
+
+type IdleCallbackWindow = Window &
+  typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+    cancelIdleCallback?: (handle: number) => void;
+  };
+
+type SceneErrorBoundaryProps = {
+  children: ReactNode;
+  onFailure: () => void;
+};
+
+type SceneErrorBoundaryState = {
+  hasError: boolean;
+};
+
+type SceneFailureReason = "renderer-error" | "context-lost";
 
 type CarModelConfig = {
   id: string;
@@ -44,21 +63,9 @@ const cars: CarModelConfig[] = [
     displayScale: 1.08,
   },
   {
-    id: "m4-g82-coupe",
-    name: "M4 G82 COUPE",
-    subtitle: "High-detail coupe orbit",
-    url: "/models/bmw-m4-2023-candidate/source/bmwm4.glb",
-    paint: "#143d8f",
-    power: "503 hp",
-    stance: "M xDrive coupe",
-    materialMode: "paint",
-    rotationY: -Math.PI * 0.24,
-    displayScale: 1.03,
-  },
-  {
     id: "m4-g82-widebody",
     name: "M4 G82 WIDEBODY",
-    subtitle: "Widebody street build",
+    subtitle: "Widebody street build, tuned high-detail pass",
     url: "/models/m4-widebody.glb",
     paint: "#2f7d4d",
     power: "540 hp",
@@ -68,12 +75,31 @@ const cars: CarModelConfig[] = [
     displayScale: 1.04,
   },
 ];
-useGLTF.preload(cars[0].url);
 
 const clamp01 = (value: number) => THREE.MathUtils.clamp(value, 0, 1);
 const easeInCubic = (value: number) => value * value * value;
 const easeOutQuint = (value: number) => 1 - Math.pow(1 - value, 5);
 const easeInOutSine = (value: number) => -(Math.cos(Math.PI * value) - 1) / 2;
+
+class SceneErrorBoundary extends Component<SceneErrorBoundaryProps, SceneErrorBoundaryState> {
+  state: SceneErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch() {
+    this.props.onFailure();
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+
+    return this.props.children;
+  }
+}
 
 function enhanceTexture(texture: THREE.Texture | null | undefined, anisotropy: number) {
   if (!texture) return;
@@ -249,6 +275,7 @@ function MCarModel({
   travelRole,
   travelDirection,
   onReady,
+  balancedMode,
 }: {
   car: CarModelConfig;
   startPulse: number;
@@ -256,6 +283,7 @@ function MCarModel({
   travelRole: "current" | "entering" | "exiting";
   travelDirection: number;
   onReady: (carId: string) => void;
+  balancedMode: boolean;
 }) {
   const { scene } = useGLTF(car.url);
   const rootRef = useRef<THREE.Group>(null);
@@ -265,7 +293,7 @@ function MCarModel({
   const wheelRefs = useRef<THREE.Mesh[]>([]);
   const gl = useThree((state) => state.gl);
   const invalidate = useThree((state) => state.invalidate);
-  const maxAnisotropy = Math.min(gl.capabilities.getMaxAnisotropy(), 16);
+  const maxAnisotropy = Math.min(gl.capabilities.getMaxAnisotropy(), balancedMode ? 2 : 8);
   const initialDriveX =
     travelRole === "entering" ? (travelDirection >= 0 ? 1 : -1) * 6.55 : 0;
 
@@ -330,6 +358,17 @@ function MCarModel({
 
     return { stagedModel: stage, wheelMeshes: wheels };
   }, [scene, car.displayScale, car.materialMode, car.paint, car.rotationY, maxAnisotropy]);
+
+  useEffect(() => {
+    return () => {
+      stagedModel.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach((material) => material.dispose());
+      });
+    };
+  }, [stagedModel]);
 
   useEffect(() => {
     wheelRefs.current = wheelMeshes;
@@ -501,7 +540,22 @@ function ViewerControls({ resetKey }: { resetKey: string }) {
   );
 }
 
-function ReflectivePlatform() {
+function WebGLContextLossGuard({ onContextLost }: { onContextLost: () => void }) {
+  const gl = useThree((state) => state.gl);
+
+  useEffect(() => {
+    const handleContextLost = () => {
+      onContextLost();
+    };
+
+    gl.domElement.addEventListener("webglcontextlost", handleContextLost, { once: true });
+    return () => gl.domElement.removeEventListener("webglcontextlost", handleContextLost);
+  }, [gl, onContextLost]);
+
+  return null;
+}
+
+function ReflectivePlatform({ balancedMode }: { balancedMode: boolean }) {
   return (
     <group>
       <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -525,10 +579,10 @@ function ReflectivePlatform() {
       <ContactShadows
         position={[0, -0.029, 0]}
         scale={7.2}
-        opacity={0.52}
-        blur={2.6}
+        opacity={balancedMode ? 0.4 : 0.52}
+        blur={balancedMode ? 1.4 : 2.6}
         far={2.2}
-        resolution={1024}
+        resolution={balancedMode ? 128 : 512}
         frames={1}
         color="#000000"
       />
@@ -586,6 +640,45 @@ function DriveTransitionOverlay({
   );
 }
 
+function GarageLoadingOverlay({
+  heading,
+  description,
+  progressValue,
+}: {
+  heading: string;
+  description: string;
+  progressValue: number;
+}) {
+  return (
+    <div className="absolute inset-0 z-[5] flex items-center justify-center bg-[radial-gradient(circle_at_50%_48%,rgba(7,24,42,0.26),transparent_38%),linear-gradient(180deg,rgba(2,3,5,0.14),rgba(2,3,5,0.58)_58%,rgba(2,3,5,0.82))]">
+      <div className="mx-6 w-full max-w-md border border-white/12 bg-black/48 px-6 py-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
+        <p className="font-frick-condensed text-[0.62rem] uppercase tracking-[0.28em] text-[#46b5ff]">
+          Garage loader
+        </p>
+        <h4 className="mt-3 font-frick text-[1.5rem] uppercase leading-[0.94] text-white sm:text-[1.85rem]">
+          {heading}
+        </h4>
+        <p className="mt-3 max-w-[34ch] font-satoshi text-sm leading-relaxed text-white/58">
+          {description}
+        </p>
+        <div className="mt-6 space-y-2">
+          <div className="h-[3px] overflow-hidden bg-white/8">
+            <motion.div
+              className="h-full bg-[linear-gradient(90deg,#0066b1_0%,#46b5ff_54%,#b11f2a_100%)]"
+              animate={{ width: `${progressValue}%` }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+          <div className="flex items-center justify-between font-frick-condensed text-[0.58rem] uppercase tracking-[0.22em] text-white/40">
+            <span>Loading assets</span>
+            <span>{Math.round(progressValue)}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StudioScene({
   car,
   startPulse,
@@ -593,6 +686,8 @@ function StudioScene({
   travelDirection,
   onStart,
   onModelReady,
+  balancedMode,
+  onContextFailure,
 }: {
   car: CarModelConfig;
   startPulse: number;
@@ -600,112 +695,192 @@ function StudioScene({
   travelDirection: number;
   onStart: () => void;
   onModelReady: (carId: string) => void;
+  balancedMode: boolean;
+  onContextFailure: (reason: SceneFailureReason) => void;
 }) {
   return (
-    <Canvas
-      frameloop="demand"
-      dpr={[1, 1.35]}
-      performance={{ min: 0.7 }}
-      gl={{
-        antialias: true,
-        alpha: true,
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 0.95,
-        powerPreference: "high-performance",
-      }}
-      onPointerDown={onStart}
-    >
-      <SceneCamera />
-      <CameraFrame />
-      <color attach="background" args={["#030405"]} />
-      <Environment resolution={1024} environmentIntensity={1.18}>
-        <Lightformer form="rect" intensity={4.6} position={[0, 4, 5]} scale={[7, 1.2, 1]} />
-        <Lightformer form="rect" intensity={3.2} position={[-4.2, 2.4, 2.8]} rotation-y={Math.PI / 4} scale={[1.2, 3.8, 1]} />
-        <Lightformer form="rect" intensity={2.6} position={[4.4, 2.2, 2.2]} rotation-y={-Math.PI / 4} scale={[1, 3.4, 1]} />
-        <Lightformer form="circle" intensity={1.4} position={[0, 2.6, -4]} scale={4.8} />
-      </Environment>
-      <ambientLight intensity={0.34} />
-      <directionalLight
-        position={[-4, 6, 5]}
-        intensity={1.35}
-      />
-      <spotLight position={[-5, 4, 5]} intensity={1.05} angle={0.34} penumbra={0.9} color="#f4f7fb" />
-      <spotLight position={[5, 4, 4]} intensity={0.5} angle={0.32} penumbra={0.8} color="#b8dfff" />
-      <group position={[0, -0.23, 0]}>
-        <ReflectivePlatform />
+    <SceneErrorBoundary onFailure={() => onContextFailure("renderer-error")}>
+      <Canvas
+        frameloop="demand"
+        dpr={balancedMode ? [0.8, 0.9] : [1, 1.15]}
+        performance={{ min: balancedMode ? 0.45 : 0.7 }}
+        gl={{
+          antialias: !balancedMode,
+          alpha: false,
+          stencil: false,
+          failIfMajorPerformanceCaveat: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 0.95,
+          powerPreference: balancedMode ? "low-power" : "high-performance",
+        }}
+        onPointerDown={onStart}
+      >
+        <WebGLContextLossGuard onContextLost={() => onContextFailure("context-lost")} />
+        <SceneCamera />
+        <CameraFrame />
+        <color attach="background" args={["#030405"]} />
+        <Environment resolution={balancedMode ? 128 : 640} environmentIntensity={balancedMode ? 0.96 : 1.18}>
+          <Lightformer form="rect" intensity={4.6} position={[0, 4, 5]} scale={[7, 1.2, 1]} />
+          <Lightformer form="rect" intensity={3.2} position={[-4.2, 2.4, 2.8]} rotation-y={Math.PI / 4} scale={[1.2, 3.8, 1]} />
+          <Lightformer form="rect" intensity={2.6} position={[4.4, 2.2, 2.2]} rotation-y={-Math.PI / 4} scale={[1, 3.4, 1]} />
+          {!balancedMode ? <Lightformer form="circle" intensity={1.4} position={[0, 2.6, -4]} scale={4.8} /> : null}
+        </Environment>
+        <ambientLight intensity={balancedMode ? 0.3 : 0.34} />
+        <directionalLight
+          position={[-4, 6, 5]}
+          intensity={balancedMode ? 1.15 : 1.35}
+        />
+        <spotLight position={[-5, 4, 5]} intensity={balancedMode ? 0.86 : 1.05} angle={0.34} penumbra={0.9} color="#f4f7fb" />
+        {!balancedMode ? (
+          <spotLight position={[5, 4, 4]} intensity={0.5} angle={0.32} penumbra={0.8} color="#b8dfff" />
+        ) : null}
+        <group position={[0, -0.23, 0]}>
+          <ReflectivePlatform balancedMode={balancedMode} />
 
-        <Suspense fallback={null}>
-          <MCarModel
-            key={`${car.id}-${travelKey}`}
-            car={car}
-            startPulse={startPulse}
-            travelKey={travelKey}
-            travelRole={travelKey === 0 ? "current" : "entering"}
-            travelDirection={travelDirection}
-            onReady={onModelReady}
-          />
-        </Suspense>
-      </group>
-      <ViewerControls resetKey={car.id} />
-    </Canvas>
+          <Suspense fallback={null}>
+            <MCarModel
+              key={`${car.id}-${travelKey}`}
+              car={car}
+              startPulse={startPulse}
+              travelKey={travelKey}
+              travelRole={travelKey === 0 ? "current" : "entering"}
+              travelDirection={travelDirection}
+              onReady={onModelReady}
+              balancedMode={balancedMode}
+            />
+          </Suspense>
+        </group>
+        <ViewerControls resetKey={car.id} />
+      </Canvas>
+    </SceneErrorBoundary>
   );
 }
 
 export default function MCarShowcase() {
   const prefersReducedMotion = useReducedMotion();
+  const { active: loaderActive, progress: loaderProgress, total: loaderTotal } = useProgress();
   const sectionRef = useRef<HTMLElement | null>(null);
+  const activationTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
+  const idleCallbackRef = useRef<number | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [startPulse, setStartPulse] = useState(0);
   const [travelKey, setTravelKey] = useState(0);
   const [travelDirection, setTravelDirection] = useState(1);
   const [sceneActivated, setSceneActivated] = useState(false);
+  const [sceneBlocked, setSceneBlocked] = useState(false);
+  const [sceneRecoveryMode, setSceneRecoveryMode] = useState(false);
+  const [sceneFailureReason, setSceneFailureReason] = useState<SceneFailureReason | null>(null);
+  const [hasRetriedScene, setHasRetriedScene] = useState(false);
   const [readyCars, setReadyCars] = useState<Set<string>>(() => new Set());
+  const { allowInteractiveGarage } = usePerformanceMode();
   const activeCar = cars[activeIndex];
   const activeCarReady = !sceneActivated || readyCars.has(activeCar.id);
+  const balancedMode = sceneRecoveryMode || !allowInteractiveGarage;
+  const needsManualSceneLoad = balancedMode;
+  const shouldShowAutoLoader = !needsManualSceneLoad && !sceneBlocked && (!sceneActivated || !activeCarReady);
+  const loadProgressValue = sceneActivated
+    ? activeCarReady
+      ? 100
+      : loaderTotal > 0 || loaderActive
+        ? Math.min(96, Math.max(14, loaderProgress))
+        : 22
+    : 8;
 
   useEffect(() => {
     const node = sectionRef.current;
-    if (!node || sceneActivated) return;
+    if (!node || sceneActivated || needsManualSceneLoad) return;
+    const browserWindow = window as IdleCallbackWindow;
+
+    const clearActivation = () => {
+      if (activationTimerRef.current !== null) {
+        globalThis.clearTimeout(activationTimerRef.current);
+        activationTimerRef.current = null;
+      }
+
+      if (idleCallbackRef.current !== null && browserWindow.cancelIdleCallback) {
+        browserWindow.cancelIdleCallback(idleCallbackRef.current);
+        idleCallbackRef.current = null;
+      }
+    };
+
+    const scheduleActivation = () => {
+      const activationDelay = balancedMode ? 160 : 340;
+
+      const activateScene = () => {
+        setSceneActivated(true);
+        idleCallbackRef.current = null;
+        activationTimerRef.current = null;
+      };
+
+      activationTimerRef.current = globalThis.setTimeout(() => {
+        activationTimerRef.current = null;
+
+        if (browserWindow.requestIdleCallback) {
+          idleCallbackRef.current = browserWindow.requestIdleCallback(
+            () => {
+              activateScene();
+            },
+            { timeout: 1800 }
+          );
+          return;
+        }
+
+        activateScene();
+      }, activationDelay);
+    };
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry?.isIntersecting) return;
-        setSceneActivated(true);
+        clearActivation();
+        scheduleActivation();
         observer.disconnect();
       },
-      { rootMargin: "1400px 0px" }
+      { rootMargin: balancedMode ? "80px 0px" : "220px 0px" }
     );
 
     observer.observe(node);
-    return () => observer.disconnect();
-  }, [sceneActivated]);
-
-  useEffect(() => {
-    if (!sceneActivated) return;
-
-    let cancelled = false;
-    let idleHandle: ReturnType<typeof globalThis.setTimeout> | null = null;
-
-    const preloadRemainingCars = () => {
-      if (cancelled) return;
-      cars.slice(1).forEach((car) => {
-        useGLTF.preload(car.url);
-      });
-    };
-
-    idleHandle = globalThis.setTimeout(preloadRemainingCars, 1800);
-
     return () => {
-      cancelled = true;
-      if (idleHandle !== null) {
-        globalThis.clearTimeout(idleHandle);
-      }
+      clearActivation();
+      observer.disconnect();
     };
-  }, [sceneActivated]);
+  }, [balancedMode, needsManualSceneLoad, sceneActivated]);
 
   const triggerStart = () => {
     if (prefersReducedMotion) return;
     setStartPulse((value) => value + 1);
+  };
+
+  const retrySceneInRecoveryMode = () => {
+    if (activationTimerRef.current !== null) {
+      globalThis.clearTimeout(activationTimerRef.current);
+      activationTimerRef.current = null;
+    }
+
+    setSceneActivated(false);
+    setSceneRecoveryMode(true);
+    setHasRetriedScene(true);
+    activationTimerRef.current = globalThis.setTimeout(() => {
+      setSceneActivated(true);
+      activationTimerRef.current = null;
+    }, 900);
+  };
+
+  const requestSceneActivation = () => {
+    if (sceneActivated || sceneBlocked) return;
+    setSceneActivated(true);
+  };
+
+  const handleSceneFailure = (reason: SceneFailureReason) => {
+    setSceneFailureReason(reason);
+
+    if (!hasRetriedScene) {
+      retrySceneInRecoveryMode();
+      return;
+    }
+
+    setSceneActivated(false);
+    setSceneBlocked(true);
   };
 
   const selectCar = (nextIndex: number) => {
@@ -714,10 +889,12 @@ export default function MCarShowcase() {
     if (normalizedIndex === activeIndex) return;
 
     const direction = nextIndex > activeIndex ? 1 : -1;
-    setTravelDirection(direction);
-    setActiveIndex(normalizedIndex);
-    setTravelKey((value) => value + 1);
-    setStartPulse((value) => value + 1);
+    startTransition(() => {
+      setTravelDirection(direction);
+      setActiveIndex(normalizedIndex);
+      setTravelKey((value) => value + 1);
+      setStartPulse((value) => value + 1);
+    });
   };
 
   return (
@@ -736,7 +913,7 @@ export default function MCarShowcase() {
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-md border-l border-[#46b5ff] pl-4 font-frick-condensed text-[0.68rem] uppercase tracking-[0.22em] text-[#46b5ff] sm:pl-6 sm:text-xs sm:tracking-[0.3em]"
           >
-            Cycle through three high-detail BMW builds with the side controls. The scene stays live without an ignition step.
+            Cycle through two high-detail BMW builds with the side controls. The scene stays live without an ignition step.
           </motion.p>
 
           <div className="flex justify-start lg:justify-end">
@@ -802,6 +979,8 @@ export default function MCarShowcase() {
                 travelKey={travelKey}
                 travelDirection={travelDirection}
                 onStart={triggerStart}
+                balancedMode={balancedMode}
+                onContextFailure={handleSceneFailure}
                 onModelReady={(carId) => {
                   setReadyCars((current) => {
                     if (current.has(carId)) return current;
@@ -812,20 +991,55 @@ export default function MCarShowcase() {
                 }}
               />
             ) : null}
+
+            {!sceneActivated && !sceneBlocked && needsManualSceneLoad ? (
+              <div className="absolute inset-0 z-[4] flex items-center justify-center bg-[radial-gradient(circle_at_50%_48%,rgba(7,24,42,0.34),transparent_38%),linear-gradient(180deg,rgba(2,3,5,0.14),rgba(2,3,5,0.58)_58%,rgba(2,3,5,0.82))]">
+                <div className="mx-6 max-w-lg border border-white/12 bg-black/46 px-6 py-7 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
+                  <p className="font-frick-condensed text-[0.62rem] uppercase tracking-[0.3em] text-[#46b5ff]">
+                    Performance mode
+                  </p>
+                  <h4 className="mt-3 font-frick text-[1.6rem] uppercase leading-[0.94] text-white sm:text-[2rem]">
+                    Load the live 3D garage only when needed.
+                  </h4>
+                  <p className="mt-3 font-satoshi text-sm leading-relaxed text-white/58">
+                    The current session is using the lighter path so the page stays responsive. The two-car garage is still available on demand.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={requestSceneActivation}
+                    className="mt-5 inline-flex min-h-11 items-center justify-center border border-[#46b5ff]/44 bg-[#46b5ff]/10 px-5 font-frick-condensed text-[0.72rem] uppercase tracking-[0.28em] text-white transition-colors hover:bg-[#46b5ff] hover:text-black"
+                  >
+                    Load live 3D
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {sceneBlocked ? (
+              <div className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center">
+                <div className="border border-white/12 bg-black/45 px-4 py-2 font-frick-condensed text-[0.68rem] uppercase tracking-[0.26em] text-white/60">
+                  {sceneFailureReason === "context-lost" ? "3D preview unavailable" : "3D renderer unavailable"}
+                </div>
+              </div>
+            ) : null}
+
+            {shouldShowAutoLoader ? (
+              <GarageLoadingOverlay
+                heading={sceneActivated ? "Loading BMW model" : "Preparing the garage"}
+                description={
+                  sceneActivated
+                    ? "The model is loading in-place so the page stays smooth. It may take a moment, but it should not spike the whole experience."
+                    : "The garage now waits briefly before loading so the heavy 3D work starts intentionally instead of spiking the scroll."
+                }
+                progressValue={loadProgressValue}
+              />
+            ) : null}
           </div>
           <DriveTransitionOverlay
             active={travelKey > 0 && !prefersReducedMotion}
             direction={travelDirection}
             travelKey={travelKey}
           />
-
-          {!activeCarReady ? (
-            <div className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center">
-              <div className="border border-white/12 bg-black/45 px-4 py-2 font-frick-condensed text-[0.68rem] uppercase tracking-[0.26em] text-white/60">
-                Loading model
-              </div>
-            </div>
-          ) : null}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,28,48,0.42)_42%,rgba(0,0,0,0.88)_100%)] p-4 sm:p-5 md:p-6">
             <div className="pointer-events-auto grid gap-3 sm:gap-4 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:items-end">

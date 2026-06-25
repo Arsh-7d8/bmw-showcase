@@ -11,7 +11,9 @@ import {
 import type { MotionValue } from "framer-motion";
 import { forwardRef, memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { sfx } from "@/lib/audio";
+import { compactHeroStill } from "@/lib/bmwMedia";
 import { useMediaQuery } from "@/lib/useMediaQuery";
+import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
 function buildCompetitionWordmark(width: number, height: number) {
   const safeWidth = Math.max(width, 390);
@@ -36,12 +38,14 @@ const CompetitionLens = memo(function CompetitionLens({
   y,
   videoScale,
   videoFilter,
+  allowVideo,
 }: {
   scale: MotionValue<number>;
   opacity: MotionValue<number>;
   y: MotionValue<string>;
   videoScale: MotionValue<number>;
   videoFilter: MotionValue<string>;
+  allowVideo: boolean;
 }) {
   const clipPathId = useId().replace(/:/g, "");
   const [fontReady, setFontReady] = useState(false);
@@ -123,48 +127,50 @@ const CompetitionLens = memo(function CompetitionLens({
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_18%,transparent_82%,rgba(255,255,255,0.015))]" />
       <motion.div
         style={{
-          scale: fontReady ? videoScale : 1,
-          filter: fontReady ? videoFilter : "none",
-          opacity: fontReady ? 1 : 0,
+          scale: fontReady && allowVideo ? videoScale : 1,
+          filter: fontReady && allowVideo ? videoFilter : "none",
+          opacity: fontReady && allowVideo ? 1 : 0,
           willChange: "transform, opacity, filter",
         }}
         className="absolute inset-0"
       >
-        <svg
-          viewBox={`0 0 ${wordmark.safeWidth} ${wordmark.safeHeight}`}
-          className="h-full w-full"
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-        >
-          <defs>
-            <clipPath id={clipPathId} clipPathUnits="userSpaceOnUse">
-              <text
-                x="50%"
-                y={wordmark.y}
-                fill="white"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontFamily="Frick, sans-serif"
-                fontWeight="900"
-                fontSize={wordmark.fontSize}
-                letterSpacing={wordmark.letterSpacing}
-              >
-                COMPETITION
-              </text>
-            </clipPath>
-          </defs>
-          <g clipPath={`url(#${clipPathId})`}>
-            <foreignObject x="0" y="0" width={wordmark.safeWidth} height={wordmark.safeHeight}>
-              <div className="h-full w-full">
-                <video autoPlay muted loop playsInline preload="auto" className="h-full w-full object-cover">
-                  <source src="/hero.mp4" type="video/mp4" />
-                </video>
-              </div>
-            </foreignObject>
-          </g>
-        </svg>
+        {allowVideo ? (
+          <svg
+            viewBox={`0 0 ${wordmark.safeWidth} ${wordmark.safeHeight}`}
+            className="h-full w-full"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <defs>
+              <clipPath id={clipPathId} clipPathUnits="userSpaceOnUse">
+                <text
+                  x="50%"
+                  y={wordmark.y}
+                  fill="white"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontFamily="Frick, sans-serif"
+                  fontWeight="900"
+                  fontSize={wordmark.fontSize}
+                  letterSpacing={wordmark.letterSpacing}
+                >
+                  COMPETITION
+                </text>
+              </clipPath>
+            </defs>
+            <g clipPath={`url(#${clipPathId})`}>
+              <foreignObject x="0" y="0" width={wordmark.safeWidth} height={wordmark.safeHeight}>
+                <div className="h-full w-full">
+                  <video autoPlay muted loop playsInline preload="metadata" className="h-full w-full object-cover">
+                    <source src="/hero.mp4" type="video/mp4" />
+                  </video>
+                </div>
+              </foreignObject>
+            </g>
+          </svg>
+        ) : null}
       </motion.div>
-      {!fontReady ? (
+      {!fontReady || !allowVideo ? (
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="font-frick text-[min(15vw,8.875rem)] uppercase tracking-[0.04em] text-white">
             Competition
@@ -280,8 +286,8 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
   const hasPlayedBass = useRef(false);
   const heroSectionRef = useRef<HTMLElement | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
-  const isMobileViewport = useMediaQuery("(max-width: 767px)");
   const isCompactViewport = useMediaQuery("(max-width: 1023px)");
+  const { allowHeroMaskVideo } = usePerformanceMode();
   const [isHeroVideoActive, setIsHeroVideoActive] = useState(true);
 
   const progress = useSpring(scrollYProgress, {
@@ -319,7 +325,7 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
   const logoScale = useTransform(
     progress,
     [0, 0.08, 0.16, 0.18],
-    isMobileViewport ? [0.68, 0.84, 0.91, 0.9] : [0.9, 1.05, 1.035, 1]
+    isCompactViewport ? [0.68, 0.84, 0.91, 0.9] : [0.9, 1.05, 1.035, 1]
   );
   const logoZ = useTransform(progress, [0, 0.2], [0, 0]);
   const logoOpacity = useTransform(progress, [0, 0.04, 0.5, 0.58], [1, 1, 1, 0]);
@@ -398,43 +404,42 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
     const video = heroVideoRef.current;
     if (!video) return;
 
-    const tryPlay = () => {
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute("muted", "");
-      video.setAttribute("playsinline", "");
-      video.load();
-      void video.play().catch(() => {});
-    };
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
 
-    const handleReady = () => {
-      if (!isCompactViewport || isHeroVideoActive) {
-        tryPlay();
+    const syncPlayback = () => {
+      const shouldPause = document.hidden || (isCompactViewport && !isHeroVideoActive);
+
+      if (shouldPause) {
+        video.pause();
+        return;
+      }
+
+      if (video.paused) {
+        void video.play().catch(() => {});
       }
     };
 
-    video.addEventListener("loadedmetadata", handleReady);
-    video.addEventListener("canplay", handleReady);
-    video.addEventListener("playing", handleReady);
-    document.addEventListener("visibilitychange", handleReady);
+    const handleCanPlay = () => {
+      syncPlayback();
+    };
 
-    if (!isCompactViewport || isHeroVideoActive) {
-      tryPlay();
-    }
+    video.addEventListener("canplay", handleCanPlay);
+    document.addEventListener("visibilitychange", syncPlayback);
 
-    if (isCompactViewport && !isHeroVideoActive) {
-      video.pause();
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      syncPlayback();
     }
 
     return () => {
-      video.removeEventListener("loadedmetadata", handleReady);
-      video.removeEventListener("canplay", handleReady);
-      video.removeEventListener("playing", handleReady);
-      document.removeEventListener("visibilitychange", handleReady);
+      video.removeEventListener("canplay", handleCanPlay);
+      document.removeEventListener("visibilitychange", syncPlayback);
     };
   }, [isCompactViewport, isHeroVideoActive]);
 
-  if (isMobileViewport) {
+  if (isCompactViewport) {
     return (
       <section ref={assignSectionRef} id="top" className="relative min-h-[100dvh] overflow-hidden bg-[#020305]">
         <div className="relative h-[100dvh]">
@@ -444,7 +449,8 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
+            poster={compactHeroStill}
             className="h-full w-full object-cover"
           >
             <source src="/hero.mp4" type="video/mp4" />
@@ -460,7 +466,16 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
     <section ref={assignSectionRef} id="top" className="relative h-[320dvh] bg-[#020305] sm:h-[350dvh] md:h-[400dvh] lg:h-[520dvh]">
       <div className="sticky top-0 h-[100dvh] overflow-hidden">
         <motion.div style={{ scale: videoScale, filter: videoFilter, willChange: "transform, filter" }} className="absolute inset-0 z-0 [contain:paint]">
-          <video ref={heroVideoRef} autoPlay muted loop playsInline preload="auto" className="h-full w-full object-cover">
+          <video
+            ref={heroVideoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={compactHeroStill}
+            className="h-full w-full object-cover"
+          >
             <source src="/hero.mp4" type="video/mp4" />
           </video>
         </motion.div>
@@ -481,6 +496,7 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
           y={lensY}
           videoScale={lensVideoScale}
           videoFilter={lensVideoFilter}
+          allowVideo={allowHeroMaskVideo}
         />
 
         <ShutterPanel
@@ -491,7 +507,7 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
           logoScale={logoScale}
           logoZ={logoZ}
           logoOpacity={logoOpacity}
-          compact={isMobileViewport}
+          compact={isCompactViewport}
         />
         <ShutterPanel
           side="right"
@@ -501,7 +517,7 @@ export const Hero = forwardRef<HTMLElement, { scrollYProgress: MotionValue<numbe
           logoScale={logoScale}
           logoZ={logoZ}
           logoOpacity={logoOpacity}
-          compact={isMobileViewport}
+          compact={isCompactViewport}
         />
       </div>
     </section>

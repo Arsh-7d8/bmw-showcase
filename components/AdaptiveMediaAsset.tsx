@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { BmwMediaAsset } from "@/lib/bmwMedia";
 import { useMediaQuery } from "@/lib/useMediaQuery";
+import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
 type AdaptiveMediaAssetProps = {
   asset: BmwMediaAsset;
@@ -24,11 +25,12 @@ export default function AdaptiveMediaAsset({
   const hostRef = useRef<HTMLDivElement | null>(null);
   const prefersReducedMotion = useReducedMotion();
   const isCompactViewport = useMediaQuery("(max-width: 1023px)");
+  const { allowAmbientVideoAutoplay } = usePerformanceMode();
   const [isNearViewport, setIsNearViewport] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
   useEffect(() => {
-    if (asset.kind !== "video" || prefersReducedMotion) {
+    if (asset.kind !== "video" || prefersReducedMotion || !allowAmbientVideoAutoplay) {
       return;
     }
 
@@ -39,17 +41,18 @@ export default function AdaptiveMediaAsset({
       (entries) => {
         setIsNearViewport(entries.some((entry) => entry.isIntersecting));
       },
-      { rootMargin: "300px 0px" }
+      { rootMargin: "120px 0px" }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [asset.kind, prefersReducedMotion]);
+  }, [allowAmbientVideoAutoplay, asset.kind, prefersReducedMotion]);
 
   const shouldRenderVideo =
     asset.kind === "video" &&
     !videoFailed &&
     !prefersReducedMotion &&
+    allowAmbientVideoAutoplay &&
     (priority || isNearViewport);
 
   return (
@@ -61,7 +64,7 @@ export default function AdaptiveMediaAsset({
           muted
           loop
           playsInline
-          preload={priority ? "auto" : "metadata"}
+          preload={priority ? "metadata" : "none"}
           poster={asset.poster}
           onError={(e) => {
             console.error("Video rendering failed or blocked: falling back to image", e);

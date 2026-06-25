@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useMediaQuery } from "@/lib/useMediaQuery";
+import { usePerformanceMode } from "@/lib/usePerformanceMode";
 
 type SectionHeadingProps = {
   eyebrow?: string;
@@ -20,7 +21,8 @@ export default function SectionHeading({
 }: SectionHeadingProps) {
   const prefersReducedMotion = useReducedMotion();
   const isCompactViewport = useMediaQuery("(max-width: 1023px)");
-  const allowAmbientMotion = !prefersReducedMotion && !isCompactViewport;
+  const { isLowPower } = usePerformanceMode();
+  const allowAmbientMotion = !prefersReducedMotion && !isCompactViewport && !isLowPower;
   const isRight = align === "right";
   const title = singleLine ? `${titleTop} ${titleBottom}`.trim() : null;
   const titleClass = singleLine
